@@ -190,6 +190,8 @@ func get_module_output_level(module):
 	"""Get the custom minimal level for the output of the given module."""
 	if modules[module].output_level == null:
 		return get_default_output_level()
+	else:
+		return modules[module].output_level
 
 func set_output_format(new_format):
 	"""Set the output string format using the following identifiers:
@@ -209,10 +211,34 @@ func get_output_format():
 
 # Specific to STRATEGY_FILE
 
+func validate_path(path):
+	"""Validate the path given as argument, making it possible to write to
+	the designated file or folder.
+	Returns whether the path is valid."""
+	if !(path.is_abs_path() or path.is_rel_path()):
+		error("The given path '%s' is not valid." % path, "logger")
+		return false
+	var dir = Directory.new()
+	var base_dir = path.get_base_dir()
+	if not dir.dir_exists(base_dir):
+		# TODO: Move directory creation to the function that will actually *write*
+		var err = dir.make_dir_recursive(base_dir)
+		if err:
+			error("Could not create the '%s' directory; exited with error %d." \
+					% [base_dir, err], "logger")
+			return false
+		else:
+			info("Successfully created the '%s' directory." % base_dir, "logger")
+	info("Path '%s' is valid." % path, "logger")
+	return true
+
 func set_default_logfile_path(path):
 	"""Set the path to the default log file for all the modules without a
 	custom path."""
-	pass
+	if path == default_logfile_path:
+		return # Spare ourselves some needless checks
+	if validate_path(path):
+		default_logfile_path = path
 
 func get_default_logfile_path():
 	"""Get the path to the default log file for all the modules without a
@@ -221,18 +247,29 @@ func get_default_logfile_path():
 
 func set_module_logfile_path(module, path):
 	"""Set the path to the custom log file for the given module."""
-	pass
+	if path == modules[module].logfile_path:
+		return # Spare ourselves some needless checks
+	if validate_path(path):
+		modules[module].logfile_path = path
 
-func get_logfile_path(module):
+func get_module_logfile_path(module):
 	"""Get the path to the custom log file for the given module."""
-	pass
+	if modules[module].logfile_path == null:
+		return get_default_logfile_path()
+	else:
+		return modules[module].logfile_path
 
 # Specific to STRATEGY_MEMORY
 
 func set_max_remembered_messages(max_messages):
 	"""Set the maximum amount of messages to be remembered when
 	using the STRATEGY_MEMORY output strategy."""
-	pass
+	if max_messages <= 0:
+		error("The maximum amount of remembered messages must be a positive non-null integer. Received %d." \
+				% max_messages, "logger")
+		return
+	max_remembered_messages = max_messages
+	info("Successfully set the maximum amount of remembered messages to %d." % max_remembered_messages, "logger")
 
 func get_max_remembered_messages():
 	"""Get the maximum amount of messages to be remembered when
