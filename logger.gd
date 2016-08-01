@@ -8,13 +8,13 @@ extends Node # Needed to work as a singleton
 
 ### Constants
 
-# Logging levels
+# Logging levels - the array and the integers should be matching
+const LEVELS = ["VERBOSE", "DEBUG", "INFO", "WARN", "ERROR"]
 const VERBOSE = 0
 const DEBUG = 1
 const INFO = 2
 const WARN = 3
 const ERROR = 4
-const LEVELS = ["VERBOSE", "DEBUG", "INFO", "WARN", "ERROR"]
 
 # Output strategies
 const STRATEGY_MUTE = 0
@@ -22,12 +22,26 @@ const STRATEGY_PRINT = 1
 const STRATEGY_FILE = 2
 const STRATEGY_MEMORY = 4
 
+# Output format identifiers
+const FORMAT_IDS = {
+  "level": "{LVL}",
+  "module": "{MOD}",
+  "message": "{MSG}"
+}
+
+### Variables
+
+# e.g. "[INFO] [main] The young alpaca started growing a goatie."
+var output_format = "[{LVL}] [{MOD}] {MSG}"
+
 ### Functions
 
 func put(level, message, module = "main"):
 	"""Log a message in the given module with the given logging level."""
-	# TODO: Implement customizable output formats
-	var output = "[%s] [%s] %s" % [LEVELS[level], module, message]
+	var output = output_format
+	output = output.replace(FORMAT_IDS.level, LEVELS[level])
+	output = output.replace(FORMAT_IDS.module, module)
+	output = output.replace(FORMAT_IDS.message, message)
 	# TODO: Implement proper support for all strategies
 	print(output)
 
@@ -78,6 +92,22 @@ func get_minimum_output_level(module = "*"):
 	"""Get the defined minimal level for the output of the given module or
 	(by default) or all modules."""
 	pass
+
+func set_output_format(new_format):
+	"""Set the output string format using the following identifiers:
+	{LVL} for the level, {MOD} for the module, {MSG} for the message.
+	The three identifiers should be contained in the output format string.
+	"""
+	for key in FORMAT_IDS:
+		if new_format.find(FORMAT_IDS[key]) == -1:
+			error("Invalid output string format. It lacks the '%s' identifier." % FORMAT_IDS[key], "logger")
+			return
+	output_format = new_format
+	info("Successfully changed the output format to '%s'." % output_format, "logger")
+
+func get_output_format():
+	"""Get the output string format."""
+	return output_format
 
 # Specific to STRATEGY_FILE
 
