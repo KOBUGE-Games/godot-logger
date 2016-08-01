@@ -65,12 +65,21 @@ var modules = {
 
 func put(level, message, module = "main"):
 	"""Log a message in the given module with the given logging level."""
+	var output_strategy = get_module_output_strategy(module, level)
+	if output_strategy == STRATEGY_MUTE or get_module_output_level(module) > level:
+		return # Out of scope
+
 	var output = output_format
 	output = output.replace(FORMAT_IDS.level, LEVELS[level])
 	output = output.replace(FORMAT_IDS.module, module)
 	output = output.replace(FORMAT_IDS.message, message)
-	# TODO: Implement proper support for all strategies
-	print(output)
+
+	if output_strategy & STRATEGY_PRINT:
+		print(output)
+	if output_strategy & STRATEGY_FILE:
+		pass # TODO: Implement support for FILE strategy
+	if output_strategy & STRATEGY_MEMORY:
+		pass # TODO: Implement support for MEMORY strategy
 
 # Helper functions for each level
 
