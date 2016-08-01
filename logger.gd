@@ -21,6 +21,14 @@ const STRATEGY_MUTE = 0
 const STRATEGY_PRINT = 1
 const STRATEGY_FILE = 2
 const STRATEGY_MEMORY = 4
+const MAX_STRATEGY = STRATEGY_MEMORY*2 - 1
+
+# Default module config
+const DEFAULT_MODULE = {
+  "output_level": null,
+  "output_strategies": [null, null, null, null, null],
+  "logfile_path": null
+}
 
 # Output format identifiers
 const FORMAT_IDS = {
@@ -38,12 +46,20 @@ const QUEUE_SMART = 2
 
 # Configuration
 var default_output_level = INFO
-var default_output_strategy = STRATEGY_PRINT
+# TODO: Find (or implement in Godot) a more clever way to achieve that
+var default_output_strategies = [STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT]
 # e.g. "[INFO] [main] The young alpaca started growing a goatie."
 var output_format = "[{LVL}] [{MOD}] {MSG}"
 var default_logfile_path = "user://" + Globals.get("application/name") + ".log"
 var max_remembered_messages = 30
 var queue_mode = QUEUE_NONE
+
+# Holds default and custom modules defined by the user
+# Default modules are initialized in _init
+var modules = {
+  "logger": DEFAULT_MODULE,
+  "main": DEFAULT_MODULE
+}
 
 ### Functions
 
@@ -83,22 +99,53 @@ func error(message, module = "main"):
 func set_default_output_strategy(output_strategy_mask, level = -1):
 	"""Set the default output strategy mask of the given level or (by
 	default) all levels for all modules without a custom strategy."""
-	pass
+	if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
+		error("The output strategy mask must be comprised between 0 and %d." % MAX_STRATEGY, "logger")
+		return
+	if level == -1: # Set for all levels
+		for i in range(0, LEVELS.size()):
+			default_output_strategies[i] = output_strategy_mask
+		info("The default output strategy mask was set to '%d' for all levels." \
+				% [output_strategy_mask])
+	else:
+		if not level in range(0, LEVELS.size()):
+			error("The level must be comprised between 0 and %d." % LEVELS.size() - 1, "logger")
+			return
+		default_output_strategies[level] = output_strategy_mask
+		info("The default output strategy mask was set to '%d' for the '%s' level." \
+				% [output_strategy_mask, LEVELS[level]])
 
 func get_default_output_strategy(level):
 	"""Get the default output strategy mask of the given level or (by
 	default) all levels for all modules without a custom strategy."""
-	return default_output_strategy
+	return default_output_strategies[level]
 
 func set_module_output_strategy(module, output_strategy_mask, level = -1):
 	"""Set the custom output strategy mask of the given level or (by
 	default) all levels for the given module."""
-	pass
+	if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
+		error("The output strategy mask must be comprised between 0 and %d." % MAX_STRATEGY, "logger")
+		return
+	if level == -1: # Set for all levels
+		for i in range(0, LEVELS.size()):
+			modules[module].output_strategies[i] = output_strategy_mask
+		info("The '%s' module's output strategy mask was set to '%d' for all levels." \
+				% [module, output_strategy_mask])
+	else:
+		if not level in range(0, LEVELS.size()):
+			error("The level must be comprised between 0 and %d." % LEVELS.size() - 1, "logger")
+			return
+		modules[module].output_strategies[level] = output_strategy_mask
+		info("The '%s' module's output strategy mask was set to '%d' for the '%s' level." \
+				% [module, output_strategy_mask, LEVELS[level]])
 
 func get_module_output_strategy(module, level):
 	"""Get the custom output strategy mask of the given level or (by
 	default) all levels for the given module."""
-	pass
+	if modules[module].output_strategies[level] == null:
+		return get_default_output_strategy(level)
+	else:
+		return modules[module].output_strategies[level]
 
 func set_default_output_level(level):
 	"""Set the default minimal level for the output of all modules without
@@ -107,7 +154,11 @@ func set_default_output_level(level):
 	their respective strategies, while levels lower than the given one will
 	be discarded.
 	"""
-	pass
+	if not level in range(0, LEVELS.size()):
+		error("The level must be comprised between 0 and %d." % LEVELS.size() - 1, "logger")
+		return
+	default_output_level = level
+	info("The default output level was set to '%s'." % LEVELS[level])
 
 func get_default_output_level():
 	"""Get the default minimal level for the output of all modules without
@@ -120,11 +171,16 @@ func set_module_output_level(module, level):
 	their respective strategies, while levels lower than the given one will
 	be discarded.
 	"""
-	pass
+	if not level in range(0, LEVELS.size()):
+		error("The level must be comprised between 0 and %d." % LEVELS.size() - 1, "logger")
+		return
+	modules[module].output_level = level
+	info("The '%s' module's output level was set to '%s'." % [module, LEVELS[level]])
 
 func get_module_output_level(module):
 	"""Get the custom minimal level for the output of the given module."""
-	pass
+	if modules[module].output_level == null:
+		return get_default_output_level()
 
 func set_output_format(new_format):
 	"""Set the output string format using the following identifiers:
