@@ -29,10 +29,21 @@ const FORMAT_IDS = {
   "message": "{MSG}"
 }
 
+# Queue modes
+const QUEUE_NONE = 0
+const QUEUE_ALL = 1
+const QUEUE_SMART = 2
+
 ### Variables
 
+# Configuration
+var default_output_level = INFO
+var default_output_strategy = STRATEGY_PRINT
 # e.g. "[INFO] [main] The young alpaca started growing a goatie."
 var output_format = "[{LVL}] [{MOD}] {MSG}"
+var default_logfile_path = "user://" + Globals.get("application/name") + ".log"
+var max_remembered_messages = 30
+var queue_mode = QUEUE_NONE
 
 ### Functions
 
@@ -69,28 +80,50 @@ func error(message, module = "main"):
 
 # Output configuration
 
-func set_output_strategy_mask(output_strategy_mask, level = -1, module = "*"):
-	"""Set the output strategy mask of the given level and module or (by
-	default) of all modules to the given strategies."""
+func set_default_output_strategy(output_strategy_mask, level = -1):
+	"""Set the default output strategy mask of the given level or (by
+	default) all levels for all modules without a custom strategy."""
 	pass
 
-func get_output_strategy_mask(level, module = "*"):
-	"""Get the output strategy mask of the given level and module or (by
-	default) of all modules."""
+func get_default_output_strategy(level):
+	"""Get the default output strategy mask of the given level or (by
+	default) all levels for all modules without a custom strategy."""
+	return default_output_strategy
+
+func set_module_output_strategy(module, output_strategy_mask, level = -1):
+	"""Set the custom output strategy mask of the given level or (by
+	default) all levels for the given module."""
 	pass
 
-func set_minimum_output_level(level, module = "*"):
-	"""Set the minimal level for the output of the given module or (by
-	default) of all modules.
+func get_module_output_strategy(module, level):
+	"""Get the custom output strategy mask of the given level or (by
+	default) all levels for the given module."""
+	pass
+
+func set_default_output_level(level):
+	"""Set the default minimal level for the output of all modules without
+	a custom output level.
 	All levels greater or equal to the given once will be output based on
 	their respective strategies, while levels lower than the given one will
 	be discarded.
 	"""
 	pass
 
-func get_minimum_output_level(module = "*"):
-	"""Get the defined minimal level for the output of the given module or
-	(by default) or all modules."""
+func get_default_output_level():
+	"""Get the default minimal level for the output of all modules without
+	a custom output level."""
+	return default_output_level
+
+func set_module_output_level(module, level):
+	"""Set the custom minimal level for the output of the given module.
+	All levels greater or equal to the given once will be output based on
+	their respective strategies, while levels lower than the given one will
+	be discarded.
+	"""
+	pass
+
+func get_module_output_level(module):
+	"""Get the custom minimal level for the output of the given module."""
 	pass
 
 func set_output_format(new_format):
@@ -111,14 +144,22 @@ func get_output_format():
 
 # Specific to STRATEGY_FILE
 
-func set_logfile_path(path, module = "*"):
-	"""Set the path to the log file for the given module or (by default)
-	for all modules."""
+func set_default_logfile_path(path):
+	"""Set the path to the default log file for all the modules without a
+	custom path."""
 	pass
 
-func get_logfile_path(module = "*"):
-	"""Get the path to the log file for the given module or (by default)
-	for all modules."""
+func get_default_logfile_path():
+	"""Get the path to the default log file for all the modules without a
+	custom path."""
+	return default_logfile_path
+
+func set_module_logfile_path(module, path):
+	"""Set the path to the custom log file for the given module."""
+	pass
+
+func get_logfile_path(module):
+	"""Get the path to the custom log file for the given module."""
 	pass
 
 # Specific to STRATEGY_MEMORY
@@ -131,15 +172,15 @@ func set_max_remembered_messages(max_messages):
 func get_max_remembered_messages():
 	"""Get the maximum amount of messages to be remembered when
 	using the STRATEGY_MEMORY output strategy."""
-	pass
+	return max_remembered_messages
 
 # Queue management
 
-func set_queue_mode(queue_mode):
+func set_queue_mode(new_mode):
 	"""Set which messages would be queued before being written to file.
 	Might improve performance with too many VERBOSE or DEBUG prints."""
 	pass
 
 func get_queue_mode():
 	"""Get which messages are queued before being written to file."""
-	pass
+	return queue_mode
