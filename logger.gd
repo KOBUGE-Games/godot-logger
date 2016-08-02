@@ -6,7 +6,9 @@
 
 extends Node # Needed to work as a singleton
 
-### Inner classes
+##================##
+## Inner classes  ##
+##================##
 
 class Logfile:
 	# TODO: Godot doesn't support docstrings for inner classes, GoDoIt (GH-1320)
@@ -175,7 +177,9 @@ class Module:
 		return logfile
 
 
-### Constants
+##=============##
+##  Constants  ##
+##=============##
 
 # Logging levels - the array and the integers should be matching
 const LEVELS = ["VERBOSE", "DEBUG", "INFO", "WARN", "ERROR"]
@@ -206,23 +210,30 @@ const QUEUE_SMART = 2
 
 const FILE_BUFFER_SIZE = 30
 
-### Variables
+
+##=============##
+##  Variables  ##
+##=============##
 
 # Configuration
 var default_output_level = INFO
 # TODO: Find (or implement in Godot) a more clever way to achieve that
 var default_output_strategies = [STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT]
+var default_logfile = null
+var default_logfile_path = "user://" + Globals.get("application/name") + ".log"
+
 # e.g. "[INFO] [main] The young alpaca started growing a goatie."
 var output_format = "[{LVL}] [{MOD}] {MSG}"
-var default_logfile_path = "user://" + Globals.get("application/name") + ".log"
-var default_logfile = null
 var max_remembered_messages = 30
 
 # Holds default and custom modules defined by the user
 # Default modules are initialized in _init via add_module
 var modules = {}
 
-### Functions
+
+##=============##
+##  Functions  ##
+##=============##
 
 func put(level, message, module = "main"):
 	"""Log a message in the given module with the given logging level."""
@@ -246,6 +257,7 @@ func put(level, message, module = "main"):
 		pass # TODO: Implement support for MEMORY strategy
 
 # Helper functions for each level
+# -------------------------------
 
 func verbose(message, module = "main"):
 	"""Log a message in the given module with level VERBOSE."""
@@ -267,7 +279,8 @@ func error(message, module = "main"):
 	"""Log a message in the given module with level ERROR."""
 	put(ERROR, message, module)
 
-# Modules
+# Module management
+# -----------------
 
 func add_module(name, output_level = default_output_level, \
 		output_strategies = default_output_strategies, logfile = default_logfile):
@@ -292,6 +305,7 @@ func get_modules():
 	return modules
 
 # Default output configuration
+# ----------------------------
 
 func set_default_output_strategy(output_strategy_mask, level = -1):
 	"""Set the default output strategy mask of the given level or (by
@@ -353,7 +367,8 @@ func get_output_format():
 	"""Get the output string format."""
 	return output_format
 
-# Specific to STRATEGY_MEMORY
+# Strategy "memory"
+# -----------------
 
 func set_max_remembered_messages(max_messages):
 	"""Set the maximum amount of messages to be remembered when
@@ -370,7 +385,10 @@ func get_max_remembered_messages():
 	using the STRATEGY_MEMORY output strategy."""
 	return max_remembered_messages
 
-### Callbacks
+
+##=============##
+##  Callbacks  ##
+##=============##
 
 func _init():
 	default_logfile = Logfile.new(default_logfile_path)
