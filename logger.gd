@@ -20,6 +20,7 @@ class Logfile:
 	func _init(_path):
 		file = File.new()
 		set_path(_path)
+		buffer.resize(FILE_BUFFER_SIZE)
 
 	func set_path(new_path):
 		if new_path == path:
@@ -36,26 +37,72 @@ class Logfile:
 	func get_queue_mode():
 		return queue_mode
 
+	func get_write_mode():
+		if not file.file_exists(path):
+			return File.WRITE # create
+		else:
+			return File.READ_WRITE # append
+
 	func validate_path(path):
 		"""Validate the path given as argument, making it possible to write to
 		the designated file or folder. Returns whether the path is valid."""
 		if !(path.is_abs_path() or path.is_rel_path()):
-			#error("The given path '%s' is not valid." % path, "logger")
+			print("[ERROR] [logger] The given path '%s' is not valid." % path)
 			return false
 		var dir = Directory.new()
 		var base_dir = path.get_base_dir()
 		if not dir.dir_exists(base_dir):
 			# TODO: Move directory creation to the function that will actually *write*
-			var err = dir.make_dir_recursive(base_dir)
+			# TODO: make_dir_recursive seems broken, change that once it's fixed
+			#var err = dir.make_dir_recursive(base_dir)
+			var err = dir.make_dir(base_dir)
 			if err:
-				#error("Could not create the '%s' directory; exited with error %d." \
-				#		% [base_dir, err], "logger")
+				print("[ERROR] [logger] Could not create the '%s' directory; exited with error %d." \
+						% [base_dir, err])
 				return false
-			#else:
-			#	info("Successfully created the '%s' directory." % base_dir, "logger")
-		#verbose("Path '%s' is valid." % path, "logger")
+			else:
+				print("[INFO] [logger] Successfully created the '%s' directory." % base_dir)
 		return true
 
+	func flush_buffer():
+		"""Flush the buffer, i.e. write its contents to the target file."""
+		var err = file.open(path, get_write_mode())
+		if err:
+			print("[ERROR] [logger] Could not open the '%s' log file; exited with error %d." \
+					% [path, err])
+			return
+		file.seek_end()
+		for i in range(buffer_idx):
+			file.store_line(buffer[i])
+		file.close()
+		buffer_idx = 0 # We don't clear the memory, we'll just overwrite it
+
+	func write(output, level):
+		"""Write the string at the end of the file (append mode), following
+		the queue mode."""
+		var queue_action = queue_mode
+		if queue_action == QUEUE_SMART:
+			if level >= WARN: # Don't queue warnings and errors
+				queue_action = QUEUE_NONE
+				flush_buffer()
+			else: # Queue the log, not important enough for "smart"
+				queue_action = QUEUE_ALL
+
+		if queue_action == QUEUE_NONE:
+			var err = file.open(path, get_write_mode())
+			if err:
+				print("[ERROR] [logger] Could not open the '%s' log file; exited with error %d." \
+						% [path, err])
+				return
+			file.seek_end()
+			file.store_line(output)
+			file.close()
+
+		if queue_action == QUEUE_ALL:
+			buffer[buffer_idx] = output
+			buffer_idx += 1
+			if buffer_idx >= FILE_BUFFER_SIZE:
+				flush_buffer()
 
 ### Constants
 
@@ -93,6 +140,8 @@ const QUEUE_NONE = 0
 const QUEUE_ALL = 1
 const QUEUE_SMART = 2
 
+const FILE_BUFFER_SIZE = 30
+
 ### Variables
 
 # Configuration
@@ -127,8 +176,10 @@ func put(level, message, module = "main"):
 
 	if output_strategy & STRATEGY_PRINT:
 		print(output)
+
 	if output_strategy & STRATEGY_FILE:
-		pass # TODO: Implement support for FILE strategy
+		modules[module].logfile.write(output, level)
+
 	if output_strategy & STRATEGY_MEMORY:
 		pass # TODO: Implement support for MEMORY strategy
 
