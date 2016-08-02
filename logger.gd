@@ -104,6 +104,77 @@ class Logfile:
 			if buffer_idx >= FILE_BUFFER_SIZE:
 				flush_buffer()
 
+
+class Module:
+	# """Class for customizable logging modules."""
+	var name = ""
+	var output_level = 0
+	var output_strategies = []
+	var logfile = null
+
+	func _init(_name, _output_level, _output_strategies, _logfile):
+		name = _name
+		set_output_level(_output_level)
+		output_strategies = _output_strategies
+		set_logfile(_logfile)
+
+	func get_name():
+		return name
+
+	func set_output_level(level):
+		"""Set the custom minimal level for the output of the module.
+		All levels greater or equal to the given once will be output based
+		on their respective strategies, while levels lower than the given one
+		will be discarded."""
+		if not level in range(0, LEVELS.size()):
+			print("[ERROR] [logger] The level must be comprised between 0 and %d." \
+					% LEVELS.size() - 1)
+			return
+		output_level = level
+
+	func get_output_level():
+		return output_level
+
+	func set_common_output_strategy(output_strategy_mask):
+		"""Set the common output strategy mask for all levels of the module."""
+		if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
+			print("[ERROR] [logger] The output strategy mask must be comprised between 0 and %d." \
+					% MAX_STRATEGY)
+			return
+		for i in range(0, LEVELS.size()):
+			output_strategies[i] = output_strategy_mask
+
+	func set_output_strategy(output_strategy_mask, level = -1):
+		"""Set the output strategy for the given level or (by default) all
+		levels of the module."""
+		if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
+			print("[ERROR] [logger] The output strategy mask must be comprised between 0 and %d." \
+					% MAX_STRATEGY)
+			return
+		if level == -1: # Set for all levels
+			for i in range(0, LEVELS.size()):
+				output_strategies[i] = output_strategy_mask
+		else:
+			if not level in range(0, LEVELS.size()):
+				print("[ERROR] [logger] The level must be comprised between 0 and %d." \
+						% LEVELS.size() - 1)
+				return
+			output_strategies[level] = output_strategy_mask
+
+	func get_output_strategy(level = -1):
+		if level == -1:
+			return output_strategies
+		else:
+			return output_strategies[level]
+
+	func set_logfile(new_logfile):
+		"""Set the Logfile instance for the module."""
+		logfile = new_logfile
+
+	func get_logfile():
+		return logfile
+
+
 ### Constants
 
 # Logging levels - the array and the integers should be matching
@@ -120,13 +191,6 @@ const STRATEGY_PRINT = 1
 const STRATEGY_FILE = 2
 const STRATEGY_MEMORY = 4
 const MAX_STRATEGY = STRATEGY_MEMORY*2 - 1
-
-# Default module config
-const DEFAULT_MODULE = {
-  "output_level": null,
-  "output_strategies": [null, null, null, null, null],
-  "logfile": null,
-}
 
 # Output format identifiers
 const FORMAT_IDS = {
@@ -155,18 +219,16 @@ var default_logfile = null
 var max_remembered_messages = 30
 
 # Holds default and custom modules defined by the user
-# Default modules are initialized in _init
-var modules = {
-  "logger": DEFAULT_MODULE,
-  "main": DEFAULT_MODULE
-}
+# Default modules are initialized in _init via add_module
+var modules = {}
 
 ### Functions
 
 func put(level, message, module = "main"):
 	"""Log a message in the given module with the given logging level."""
-	var output_strategy = get_module_output_strategy(module, level)
-	if output_strategy == STRATEGY_MUTE or get_module_output_level(module) > level:
+	var module_ref = get_module(module)
+	var output_strategy = module_ref.get_output_strategy(level)
+	if output_strategy == STRATEGY_MUTE or module_ref.get_output_level() > level:
 		return # Out of scope
 
 	var output = output_format
@@ -178,7 +240,7 @@ func put(level, message, module = "main"):
 		print(output)
 
 	if output_strategy & STRATEGY_FILE:
-		modules[module].logfile.write(output, level)
+		module_ref.get_logfile().write(output, level)
 
 	if output_strategy & STRATEGY_MEMORY:
 		pass # TODO: Implement support for MEMORY strategy
@@ -205,7 +267,31 @@ func error(message, module = "main"):
 	"""Log a message in the given module with level ERROR."""
 	put(ERROR, message, module)
 
-# Output configuration
+# Modules
+
+func add_module(name, output_level = default_output_level, \
+		output_strategies = default_output_strategies, logfile = default_logfile):
+	"""Add a new module with the given parameter or (by default) the
+	default ones."""
+	if modules.has(name):
+		info("The module '%s' already exists; discarding the call to add it anew." \
+				% name, "logger")
+		return
+	modules[name] = Module.new(name, output_level, output_strategies, logfile)
+
+func get_module(module = "main"):
+	"""Retrieve the given module if it exists; if not, it will be created."""
+	if not modules.has(module):
+		info("The requested module '%s' does not exist. It will be created with default values." \
+				% module, "logger")
+		add_module(module)
+	return modules[module]
+
+func get_modules():
+	"""Retrieve the dictionary containing all modules."""
+	return modules
+
+# Default output configuration
 
 func set_default_output_strategy(output_strategy_mask, level = -1):
 	"""Set the default output strategy mask of the given level or (by
@@ -232,34 +318,6 @@ func get_default_output_strategy(level):
 	default) all levels for all modules without a custom strategy."""
 	return default_output_strategies[level]
 
-func set_module_output_strategy(module, output_strategy_mask, level = -1):
-	"""Set the custom output strategy mask of the given level or (by
-	default) all levels for the given module."""
-	if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
-		error("The output strategy mask must be comprised between 0 and %d." \
-				% MAX_STRATEGY, "logger")
-		return
-	if level == -1: # Set for all levels
-		for i in range(0, LEVELS.size()):
-			modules[module].output_strategies[i] = output_strategy_mask
-		info("The '%s' module's output strategy mask was set to '%d' for all levels." \
-				% [module, output_strategy_mask], "logger")
-	else:
-		if not level in range(0, LEVELS.size()):
-			error("The level must be comprised between 0 and %d." % LEVELS.size() - 1, "logger")
-			return
-		modules[module].output_strategies[level] = output_strategy_mask
-		info("The '%s' module's output strategy mask was set to '%d' for the '%s' level." \
-				% [module, output_strategy_mask, LEVELS[level]], "logger")
-
-func get_module_output_strategy(module, level):
-	"""Get the custom output strategy mask of the given level or (by
-	default) all levels for the given module."""
-	if modules[module].output_strategies[level] == null:
-		return get_default_output_strategy(level)
-	else:
-		return modules[module].output_strategies[level]
-
 func set_default_output_level(level):
 	"""Set the default minimal level for the output of all modules without
 	a custom output level.
@@ -278,25 +336,6 @@ func get_default_output_level():
 	a custom output level."""
 	return default_output_level
 
-func set_module_output_level(module, level):
-	"""Set the custom minimal level for the output of the given module.
-	All levels greater or equal to the given once will be output based on
-	their respective strategies, while levels lower than the given one will
-	be discarded.
-	"""
-	if not level in range(0, LEVELS.size()):
-		error("The level must be comprised between 0 and %d." % LEVELS.size() - 1, "logger")
-		return
-	modules[module].output_level = level
-	info("The '%s' module's output level was set to '%s'." % [module, LEVELS[level]], "logger")
-
-func get_module_output_level(module):
-	"""Get the custom minimal level for the output of the given module."""
-	if modules[module].output_level == null:
-		return get_default_output_level()
-	else:
-		return modules[module].output_level
-
 func set_output_format(new_format):
 	"""Set the output string format using the following identifiers:
 	{LVL} for the level, {MOD} for the module, {MSG} for the message.
@@ -313,21 +352,6 @@ func set_output_format(new_format):
 func get_output_format():
 	"""Get the output string format."""
 	return output_format
-
-# Specific to STRATEGY_FILE
-
-func set_module_logfile(module, logfile):
-	"""Set the Logfile instance for the given module."""
-	if logfile == modules[module].logfile:
-		return # Spare ourselves some needless checks
-	modules[module].logfile = logfile
-
-func get_module_logfile(module):
-	"""Get the Logfile instance for the given module."""
-	if modules[module].logfile == null:
-		return get_default_logfile()
-	else:
-		return modules[module].logfile
 
 # Specific to STRATEGY_MEMORY
 
@@ -350,5 +374,5 @@ func get_max_remembered_messages():
 
 func _init():
 	default_logfile = Logfile.new(default_logfile_path)
-	for key in modules:
-		modules[key].logfile = default_logfile
+	add_module("logger") # needs to be instanced first
+	add_module("name")
