@@ -109,20 +109,21 @@ func set_default_output_strategy(output_strategy_mask, level = -1):
 	"""Set the default output strategy mask of the given level or (by
 	default) all levels for all modules without a custom strategy."""
 	if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
-		error("The output strategy mask must be comprised between 0 and %d." % MAX_STRATEGY, "logger")
+		error("The output strategy mask must be comprised between 0 and %d." \
+				% MAX_STRATEGY, "logger")
 		return
 	if level == -1: # Set for all levels
 		for i in range(0, LEVELS.size()):
 			default_output_strategies[i] = output_strategy_mask
 		info("The default output strategy mask was set to '%d' for all levels." \
-				% [output_strategy_mask])
+				% [output_strategy_mask], "logger")
 	else:
 		if not level in range(0, LEVELS.size()):
 			error("The level must be comprised between 0 and %d." % LEVELS.size() - 1, "logger")
 			return
 		default_output_strategies[level] = output_strategy_mask
 		info("The default output strategy mask was set to '%d' for the '%s' level." \
-				% [output_strategy_mask, LEVELS[level]])
+				% [output_strategy_mask, LEVELS[level]], "logger")
 
 func get_default_output_strategy(level):
 	"""Get the default output strategy mask of the given level or (by
@@ -133,20 +134,21 @@ func set_module_output_strategy(module, output_strategy_mask, level = -1):
 	"""Set the custom output strategy mask of the given level or (by
 	default) all levels for the given module."""
 	if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
-		error("The output strategy mask must be comprised between 0 and %d." % MAX_STRATEGY, "logger")
+		error("The output strategy mask must be comprised between 0 and %d." \
+				% MAX_STRATEGY, "logger")
 		return
 	if level == -1: # Set for all levels
 		for i in range(0, LEVELS.size()):
 			modules[module].output_strategies[i] = output_strategy_mask
 		info("The '%s' module's output strategy mask was set to '%d' for all levels." \
-				% [module, output_strategy_mask])
+				% [module, output_strategy_mask], "logger")
 	else:
 		if not level in range(0, LEVELS.size()):
 			error("The level must be comprised between 0 and %d." % LEVELS.size() - 1, "logger")
 			return
 		modules[module].output_strategies[level] = output_strategy_mask
 		info("The '%s' module's output strategy mask was set to '%d' for the '%s' level." \
-				% [module, output_strategy_mask, LEVELS[level]])
+				% [module, output_strategy_mask, LEVELS[level]], "logger")
 
 func get_module_output_strategy(module, level):
 	"""Get the custom output strategy mask of the given level or (by
@@ -167,7 +169,7 @@ func set_default_output_level(level):
 		error("The level must be comprised between 0 and %d." % LEVELS.size() - 1, "logger")
 		return
 	default_output_level = level
-	info("The default output level was set to '%s'." % LEVELS[level])
+	info("The default output level was set to '%s'." % LEVELS[level], "logger")
 
 func get_default_output_level():
 	"""Get the default minimal level for the output of all modules without
@@ -184,7 +186,7 @@ func set_module_output_level(module, level):
 		error("The level must be comprised between 0 and %d." % LEVELS.size() - 1, "logger")
 		return
 	modules[module].output_level = level
-	info("The '%s' module's output level was set to '%s'." % [module, LEVELS[level]])
+	info("The '%s' module's output level was set to '%s'." % [module, LEVELS[level]], "logger")
 
 func get_module_output_level(module):
 	"""Get the custom minimal level for the output of the given module."""
@@ -200,7 +202,8 @@ func set_output_format(new_format):
 	"""
 	for key in FORMAT_IDS:
 		if new_format.find(FORMAT_IDS[key]) == -1:
-			error("Invalid output string format. It lacks the '%s' identifier." % FORMAT_IDS[key], "logger")
+			error("Invalid output string format. It lacks the '%s' identifier." \
+					% FORMAT_IDS[key], "logger")
 			return
 	output_format = new_format
 	info("Successfully changed the output format to '%s'." % output_format, "logger")
@@ -229,7 +232,7 @@ func validate_path(path):
 			return false
 		else:
 			info("Successfully created the '%s' directory." % base_dir, "logger")
-	info("Path '%s' is valid." % path, "logger")
+	verbose("Path '%s' is valid." % path, "logger")
 	return true
 
 func set_default_logfile_path(path):
