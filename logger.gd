@@ -242,10 +242,7 @@ func put(level, message, module = "main"):
 	if output_strategy == STRATEGY_MUTE or module_ref.get_output_level() > level:
 		return # Out of scope
 
-	var output = output_format
-	output = output.replace(FORMAT_IDS.level, LEVELS[level])
-	output = output.replace(FORMAT_IDS.module, module)
-	output = output.replace(FORMAT_IDS.message, message)
+	var output = format(output_format, level, module, message)
 
 	if output_strategy & STRATEGY_PRINT:
 		print(output)
@@ -349,6 +346,16 @@ func get_default_output_level():
 	"""Get the default minimal level for the output of all modules without
 	a custom output level."""
 	return default_output_level
+
+# Output formatting
+# -----------------
+
+static func format(template, level, module, message):
+	var output = template
+	output = output.replace(FORMAT_IDS.level, LEVELS[level])
+	output = output.replace(FORMAT_IDS.module, module)
+	output = output.replace(FORMAT_IDS.message, message)
+	return output
 
 func set_output_format(new_format):
 	"""Set the output string format using the following identifiers:
