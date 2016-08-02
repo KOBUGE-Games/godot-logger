@@ -6,6 +6,57 @@
 
 extends Node # Needed to work as a singleton
 
+### Inner classes
+
+class Logfile:
+	# TODO: Godot doesn't support docstrings for inner classes, GoDoIt (GH-1320)
+	# """Class for log files that can be shared between various modules."""
+	var file = null
+	var path = ""
+	var queue_mode = QUEUE_NONE
+	var buffer = StringArray()
+	var buffer_idx = 0
+
+	func _init(_path):
+		file = File.new()
+		set_path(_path)
+
+	func set_path(new_path):
+		if new_path == path:
+			return # Spare ourselves some needless checks
+		if validate_path(new_path):
+			path = new_path
+
+	func get_path():
+		return path
+
+	func set_queue_mode(new_mode):
+		queue_mode = new_mode
+
+	func get_queue_mode():
+		return queue_mode
+
+	func validate_path(path):
+		"""Validate the path given as argument, making it possible to write to
+		the designated file or folder. Returns whether the path is valid."""
+		if !(path.is_abs_path() or path.is_rel_path()):
+			#error("The given path '%s' is not valid." % path, "logger")
+			return false
+		var dir = Directory.new()
+		var base_dir = path.get_base_dir()
+		if not dir.dir_exists(base_dir):
+			# TODO: Move directory creation to the function that will actually *write*
+			var err = dir.make_dir_recursive(base_dir)
+			if err:
+				#error("Could not create the '%s' directory; exited with error %d." \
+				#		% [base_dir, err], "logger")
+				return false
+			#else:
+			#	info("Successfully created the '%s' directory." % base_dir, "logger")
+		#verbose("Path '%s' is valid." % path, "logger")
+		return true
+
+
 ### Constants
 
 # Logging levels - the array and the integers should be matching
@@ -27,7 +78,7 @@ const MAX_STRATEGY = STRATEGY_MEMORY*2 - 1
 const DEFAULT_MODULE = {
   "output_level": null,
   "output_strategies": [null, null, null, null, null],
-  "logfile_path": null
+  "logfile": null,
 }
 
 # Output format identifiers
@@ -51,8 +102,8 @@ var default_output_strategies = [STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT,
 # e.g. "[INFO] [main] The young alpaca started growing a goatie."
 var output_format = "[{LVL}] [{MOD}] {MSG}"
 var default_logfile_path = "user://" + Globals.get("application/name") + ".log"
+var default_logfile = null
 var max_remembered_messages = 30
-var queue_mode = QUEUE_NONE
 
 # Holds default and custom modules defined by the user
 # Default modules are initialized in _init
@@ -214,53 +265,18 @@ func get_output_format():
 
 # Specific to STRATEGY_FILE
 
-func validate_path(path):
-	"""Validate the path given as argument, making it possible to write to
-	the designated file or folder.
-	Returns whether the path is valid."""
-	if !(path.is_abs_path() or path.is_rel_path()):
-		error("The given path '%s' is not valid." % path, "logger")
-		return false
-	var dir = Directory.new()
-	var base_dir = path.get_base_dir()
-	if not dir.dir_exists(base_dir):
-		# TODO: Move directory creation to the function that will actually *write*
-		var err = dir.make_dir_recursive(base_dir)
-		if err:
-			error("Could not create the '%s' directory; exited with error %d." \
-					% [base_dir, err], "logger")
-			return false
-		else:
-			info("Successfully created the '%s' directory." % base_dir, "logger")
-	verbose("Path '%s' is valid." % path, "logger")
-	return true
-
-func set_default_logfile_path(path):
-	"""Set the path to the default log file for all the modules without a
-	custom path."""
-	if path == default_logfile_path:
+func set_module_logfile(module, logfile):
+	"""Set the Logfile instance for the given module."""
+	if logfile == modules[module].logfile:
 		return # Spare ourselves some needless checks
-	if validate_path(path):
-		default_logfile_path = path
+	modules[module].logfile = logfile
 
-func get_default_logfile_path():
-	"""Get the path to the default log file for all the modules without a
-	custom path."""
-	return default_logfile_path
-
-func set_module_logfile_path(module, path):
-	"""Set the path to the custom log file for the given module."""
-	if path == modules[module].logfile_path:
-		return # Spare ourselves some needless checks
-	if validate_path(path):
-		modules[module].logfile_path = path
-
-func get_module_logfile_path(module):
-	"""Get the path to the custom log file for the given module."""
-	if modules[module].logfile_path == null:
-		return get_default_logfile_path()
+func get_module_logfile(module):
+	"""Get the Logfile instance for the given module."""
+	if modules[module].logfile == null:
+		return get_default_logfile()
 	else:
-		return modules[module].logfile_path
+		return modules[module].logfile
 
 # Specific to STRATEGY_MEMORY
 
@@ -279,13 +295,9 @@ func get_max_remembered_messages():
 	using the STRATEGY_MEMORY output strategy."""
 	return max_remembered_messages
 
-# Queue management
+### Callbacks
 
-func set_queue_mode(new_mode):
-	"""Set which messages would be queued before being written to file.
-	Might improve performance with too many VERBOSE or DEBUG prints."""
-	pass
-
-func get_queue_mode():
-	"""Get which messages are queued before being written to file."""
-	return queue_mode
+func _init():
+	default_logfile = Logfile.new(default_logfile_path)
+	for key in modules:
+		modules[key].logfile = default_logfile
