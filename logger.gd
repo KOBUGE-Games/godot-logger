@@ -68,6 +68,8 @@ class Logfile:
 
 	func flush_buffer():
 		"""Flush the buffer, i.e. write its contents to the target file."""
+		if buffer_idx == 0:
+			return # Nothing to write
 		var err = file.open(path, get_write_mode())
 		if err:
 			print("[ERROR] [logger] Could not open the '%s' log file; exited with error %d." \
@@ -462,3 +464,14 @@ func _init():
 	add_module("logger") # needs to be instanced first
 	add_module("name")
 	memory_buffer.resize(max_memory_size)
+
+func _exit_tree():
+	# Flush non-empty buffers
+	var processed_logfiles = []
+	var logfile = null
+	for module in modules:
+		logfile = modules[module].get_logfile()
+		if logfile in processed_logfiles:
+			continue
+		logfile.flush_buffer()
+		processed_logfiles.append(logfile)
