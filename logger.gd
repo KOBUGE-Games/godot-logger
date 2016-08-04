@@ -114,7 +114,8 @@ class Module:
 	func _init(_name, _output_level, _output_strategies, _logfile):
 		name = _name
 		set_output_level(_output_level)
-		output_strategies = _output_strategies
+		for strategy in _output_strategies: # Need to force deep copy
+			output_strategies.append(strategy)
 		set_logfile(_logfile)
 
 	func get_name():
