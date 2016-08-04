@@ -336,6 +336,32 @@ func get_modules():
 # Logfiles management
 # -------------------
 
+func set_default_logfile_path(new_logfile_path, keep_old = false):
+	"""Sets the new default logfile path. Unless configured otherwise with
+	the optional keep_old argument, it will replace the logfile for all
+	modules which were configured for the previous logfile path."""
+	if new_logfile_path == default_logfile_path:
+		return # Nothing to do
+
+	var old_logfile = get_logfile(default_logfile_path)
+	var new_logfile = null
+	if logfiles.has(new_logfile_path): # Already exists
+		new_logfile = logfiles[new_logfile_path]
+	else: # Create a new logfile
+		new_logfile = add_logfile(new_logfile_path)
+		logfiles[new_logfile_path] = new_logfile
+
+	if not keep_old: # Replace the old defaut logfile in all modules that used it
+		for module in modules.values():
+			if module.get_logfile() == old_logfile:
+				module.set_logfile(new_logfile)
+		logfiles.erase(default_logfile_path)
+	default_logfile_path = new_logfile_path
+
+func get_default_logfile_path():
+	"""Return the default logfile path."""
+	return default_logfile_path
+
 func add_logfile(logfile_path = default_logfile_path):
 	"""Add a new logfile that can then be attached to one or more modules.
 	Returns a reference to the instanced logfile."""
