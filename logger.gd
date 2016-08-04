@@ -21,14 +21,9 @@ class Logfile:
 
 	func _init(_path):
 		file = File.new()
-		set_path(_path)
+		if validate_path(_path):
+			path = _path
 		buffer.resize(FILE_BUFFER_SIZE)
-
-	func set_path(new_path):
-		if new_path == path:
-			return # Spare ourselves some needless checks
-		if validate_path(new_path):
-			path = new_path
 
 	func get_path():
 		return path
@@ -221,8 +216,8 @@ const FILE_BUFFER_SIZE = 30
 var default_output_level = INFO
 # TODO: Find (or implement in Godot) a more clever way to achieve that
 var default_output_strategies = [STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT]
-var default_logfile = null
 var default_logfile_path = "user://" + Globals.get("application/name") + ".log"
+var default_configfile_path = "user://logger.cfg"
 
 # e.g. "[INFO] [main] The young alpaca started growing a goatie."
 var output_format = "[{LVL}] [{MOD}] {MSG}"
@@ -235,8 +230,9 @@ var memory_first_loop = true
 var memory_cache = []
 var invalid_memory_cache = false
 
-# Holds default and custom modules defined by the user
+# Holds default and custom modules and logfiles defined by the user
 # Default modules are initialized in _init via add_module
+var logfiles = {}
 var modules = {}
 
 
@@ -294,14 +290,18 @@ func error(message, module = "main"):
 # -----------------
 
 func add_module(name, output_level = default_output_level, \
-		output_strategies = default_output_strategies, logfile = default_logfile):
+		output_strategies = default_output_strategies, logfile = null):
 	"""Add a new module with the given parameter or (by default) the
-	default ones."""
+	default ones.
+	Returns a reference to the instanced module."""
 	if modules.has(name):
 		info("The module '%s' already exists; discarding the call to add it anew." \
 				% name, "logger")
-		return
-	modules[name] = Module.new(name, output_level, output_strategies, logfile)
+	else:
+		if logfile == null:
+			logfile = get_logfile(default_logfile_path)
+		modules[name] = Module.new(name, output_level, output_strategies, logfile)
+	return modules[name]
 
 func get_module(module = "main"):
 	"""Retrieve the given module if it exists; if not, it will be created."""
@@ -314,6 +314,31 @@ func get_module(module = "main"):
 func get_modules():
 	"""Retrieve the dictionary containing all modules."""
 	return modules
+
+# Logfiles management
+# -------------------
+
+func add_logfile(logfile_path = default_logfile_path):
+	"""Add a new logfile that can then be attached to one or more modules.
+	Returns a reference to the instanced logfile."""
+	if logfiles.has(logfile_path):
+		info("A logfile pointing to '%s' already exists; discarding the call to add it anew." \
+				% logfile_path, "logger")
+	else:
+		logfiles[logfile_path] = Logfile.new(logfile_path)
+	return logfiles[logfile_path]
+
+func get_logfile(logfile_path):
+	"""Retrieve the given logfile if it exists, otherwise returns null."""
+	if not logfiles.has(logfile_path):
+		warn("The requested logfile pointing to '%s' does not exist.", logfile_path, "logger")
+		return null
+	else:
+		return logfiles[logfile_path]
+
+func get_logfiles():
+	"""Retrieve the dictionary containing all logfiles."""
+	return logfiles
 
 # Default output configuration
 # ----------------------------
@@ -460,7 +485,9 @@ func clear_memory():
 ##=============##
 
 func _init():
-	default_logfile = Logfile.new(default_logfile_path)
+	# Default logfile
+	add_logfile(default_logfile_path)
+	# Default modules
 	add_module("logger") # needs to be instanced first
 	add_module("name")
 	memory_buffer.resize(max_memory_size)
