@@ -19,10 +19,11 @@ class Logfile:
 	var buffer = StringArray()
 	var buffer_idx = 0
 
-	func _init(_path):
+	func _init(_path, _queue_mode = QUEUE_NONE):
 		file = File.new()
 		if validate_path(_path):
 			path = _path
+		queue_mode = _queue_mode
 		buffer.resize(FILE_BUFFER_SIZE)
 
 	func get_path():
@@ -103,6 +104,12 @@ class Logfile:
 			if buffer_idx >= FILE_BUFFER_SIZE:
 				flush_buffer()
 
+	func get_config():
+		return {
+			"path": get_path(),
+			"queue_mode": get_queue_mode()
+		}
+
 
 class Module:
 	# """Class for customizable logging modules."""
@@ -173,6 +180,14 @@ class Module:
 
 	func get_logfile():
 		return logfile
+
+	func get_config():
+		return {
+			"name": get_name(),
+			"output_level": get_output_level(),
+			"output_strategies": get_output_strategy(),
+			"logfile_path": get_logfile().get_path()
+		}
 
 
 ##=============##
@@ -481,6 +496,91 @@ func clear_memory():
 	invalid_memory_cache = true
 
 
+# Configuration loading/saving
+# ----------------------------
+
+func save_config(configfile = default_configfile_path):
+	"""Save the default configuration as well as the set of modules and
+	their respective configurations.
+	The ConfigFile API is used to generate the config file passed as
+	argument. A unique "logger" section is used, so that it can be merged
+	in a project's engine.cfg.
+	Returns an error code (OK or some ERR_*)."""
+	var config = ConfigFile.new()
+
+	# Store default config
+	config.set_value("logger", "default_output_level", default_output_level)
+	config.set_value("logger", "default_output_strategies", default_output_strategies)
+	config.set_value("logger", "default_logfile_path", default_logfile_path)
+	config.set_value("logger", "max_memory_size", max_memory_size)
+
+	# Logfiles config
+	var logfiles_arr = []
+	var sorted_keys = logfiles.keys()
+	sorted_keys.sort() # Sadly doesn't return the array, so we need to split it
+	for logfile in sorted_keys:
+		logfiles_arr.append(logfiles[logfile].get_config())
+	config.set_value("logger", "logfiles", logfiles_arr)
+
+	# Modules config
+	var modules_arr = []
+	sorted_keys = modules.keys()
+	sorted_keys.sort()
+	for module in sorted_keys:
+		modules_arr.append(modules[module].get_config())
+	config.set_value("logger", "modules", modules_arr)
+
+	# Save and return the corresponding error code
+	var err = config.save(configfile)
+	if err:
+		error("Could not save the config in '%s'; exited with error %d." \
+				% [configfile, err], "logger")
+		return err
+	info("Successfully saved the config to '%s'." % configfile, "logger")
+	return OK
+
+func load_config(configfile = default_configfile_path):
+	"""Load the configuration as well as the set of defined modules and
+	their respective configurations. The expect file contents must be those
+	produced by the ConfigFile API.
+	Returns an error code (OK or some ERR_*)."""
+	# Look for the file
+	var dir = Directory.new()
+	if not dir.file_exists(configfile):
+		warn("Could not load the config in '%s', the file does not exist." % configfile, "logger")
+		return ERR_FILE_NOT_FOUND
+
+	# Load its contents
+	var config = ConfigFile.new()
+	var err = config.load(configfile)
+	if err:
+		warn("Could not load the config in '%s'; exited with error %d." \
+				% [configfile, err], "logger")
+		return err
+
+	# Load default config
+	default_output_level = config.get_value("logger", "default_output_level", default_output_level)
+	default_output_strategies = config.get_value("logger", "default_output_strategies", default_output_strategies)
+	default_logfile_path = config.get_value("logger", "default_logfile_path", default_logfile_path)
+	max_memory_size = config.get_value("logger", "max_memory_size", max_memory_size)
+
+	# Load logfiles config and initialize them
+	logfiles = {}
+	for logfile_cfg in config.get_value("logger", "logfiles"):
+		var logfile = Logfile.new(logfile_cfg["path"], logfile_cfg["queue_mode"])
+		logfiles[logfile_cfg["path"]] = logfile
+
+	# Load modules config and initialize them
+	modules = {}
+	for module_cfg in config.get_value("logger", "modules"):
+		var module = Module.new(module_cfg["name"], module_cfg["output_level"], \
+				module_cfg["output_strategies"], get_logfile(module_cfg["logfile_path"]))
+		modules[module_cfg["name"]] = module
+
+	info("Successfully loaded the config from '%s'." % configfile, "logger")
+	return OK
+
+
 ##=============##
 ##  Callbacks  ##
 ##=============##
@@ -490,7 +590,7 @@ func _init():
 	add_logfile(default_logfile_path)
 	# Default modules
 	add_module("logger") # needs to be instanced first
-	add_module("name")
+	add_module("main")
 	memory_buffer.resize(max_memory_size)
 
 func _exit_tree():
