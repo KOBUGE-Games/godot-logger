@@ -51,9 +51,7 @@ class Logfile:
 		var base_dir = path.get_base_dir()
 		if not dir.dir_exists(base_dir):
 			# TODO: Move directory creation to the function that will actually *write*
-			# TODO: make_dir_recursive seems broken, change that once it's fixed
-			#var err = dir.make_dir_recursive(base_dir)
-			var err = dir.make_dir(base_dir)
+			var err = dir.make_dir_recursive(base_dir)
 			if err:
 				print("[ERROR] [logger] Could not create the '%s' directory; exited with error %d." \
 						% [base_dir, err])
