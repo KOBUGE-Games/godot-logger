@@ -121,8 +121,14 @@ class Module:
 	func _init(_name, _output_level, _output_strategies, _logfile):
 		name = _name
 		set_output_level(_output_level)
-		for strategy in _output_strategies: # Need to force deep copy
-			output_strategies.append(strategy)
+
+		if typeof(_output_strategies) == TYPE_INT: # Only one strategy, use it for all
+			for i in range(0, LEVELS.size()):
+				output_strategies.append(_output_strategies)
+		else:
+			for strategy in _output_strategies: # Need to force deep copy
+				output_strategies.append(strategy)
+
 		set_logfile(_logfile)
 
 	func get_name():
