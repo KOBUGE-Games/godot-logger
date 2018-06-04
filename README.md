@@ -7,11 +7,18 @@ projects developed with [Godot Engine](https://godotengine.org).
 Usage
 -----
 
-Copy the `logger.gd` file in your project folder, and define it as an autoloaded
-singelton in your project's settings (e.g. with the name *Logger*).
+Copy the `logger.gd` file into your project folder, and define it as an autoloaded
+singleton in your project's settings (e.g. with the name *Logger*):
+```
+Logger="*res://logger.gd"
+```
 
-The methods of the API can then be access from any other script via the *Logger*
-singelton.
+The methods of the API can then be accessed from any other script via the *Logger*
+singleton:
+```
+  Logger.warn('alpaca mismatch!')
+  Logger.info('reticulating splines...', mymodule)
+```
 
 Read the code for details about the API, it's extensively documented.
 
