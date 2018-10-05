@@ -201,7 +201,7 @@ class Module:
 const PLUGIN_NAME = "logger"
 
 # Logging levels - the array and the integers should be matching
-const LEVELS = ["VERBOSE", "DEBUG", "INFO", "WARN", "ERROR"]
+const LEVELS = ["VERB", "DBUG", "INFO", "WARN", "ERR "]
 const VERBOSE = 0
 const DEBUG = 1
 const INFO = 2
@@ -238,7 +238,7 @@ const FILE_BUFFER_SIZE = 30
 var default_output_level = INFO
 # TODO: Find (or implement in Godot) a more clever way to achieve that
 var default_output_strategies = [STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT]
-var default_logfile_path = "user://%s.log" % ProjectSettings.get_setting("application/config/name")
+var default_logfile_path = "user://%s-%s.log" % [ ProjectSettings.get_setting("application/config/name"), formatted_datetime() ]
 var default_configfile_path = "user://%s.cfg" % PLUGIN_NAME
 
 # e.g. "[INFO] [main] The young alpaca started growing a goatie."
@@ -436,12 +436,16 @@ func get_default_output_level():
 
 # Output formatting
 # -----------------
+static func formatted_datetime():
+	var d = OS.get_datetime()
+	return "%d-%0*d-%0*d_%0*d:%0*d:%0*d" % [ d["year"], 2, d["month"], 2, d["day"], 2, d["hour"], 2, d["minute"], 2, d["second"] ]
 
 static func format(template, level, module, message):
 	var output = template
 	output = output.replace(FORMAT_IDS.level, LEVELS[level])
 	output = output.replace(FORMAT_IDS.module, module)
 	output = output.replace(FORMAT_IDS.message, message)
+	output = formatted_datetime() + " " + output
 	return output
 
 func set_output_format(new_format):
