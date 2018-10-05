@@ -379,7 +379,7 @@ func add_logfile(logfile_path = default_logfile_path):
 func get_logfile(logfile_path):
 	"""Retrieve the given logfile if it exists, otherwise returns null."""
 	if not logfiles.has(logfile_path):
-		warn("The requested logfile pointing to '%s' does not exist.", logfile_path, PLUGIN_NAME)
+		warn("The requested logfile pointing to '%s' does not exist." % logfile_path, PLUGIN_NAME)
 		return null
 	else:
 		return logfiles[logfile_path]
@@ -405,7 +405,7 @@ func set_default_output_strategy(output_strategy_mask, level = -1):
 				% [output_strategy_mask], PLUGIN_NAME)
 	else:
 		if not level in range(0, LEVELS.size()):
-			error("The level must be comprised between 0 and %d." % LEVELS.size() - 1, PLUGIN_NAME)
+			error("The level must be comprised between 0 and %d." % (LEVELS.size() - 1), PLUGIN_NAME)
 			return
 		default_output_strategies[level] = output_strategy_mask
 		info("The default output strategy mask was set to '%d' for the '%s' level." \
@@ -424,7 +424,7 @@ func set_default_output_level(level):
 	be discarded.
 	"""
 	if not level in range(0, LEVELS.size()):
-		error("The level must be comprised between 0 and %d." % LEVELS.size() - 1, PLUGIN_NAME)
+		error("The level must be comprised between 0 and %d." % (LEVELS.size() - 1), PLUGIN_NAME)
 		return
 	default_output_level = level
 	info("The default output level was set to '%s'." % LEVELS[level], PLUGIN_NAME)
