@@ -6,6 +6,8 @@
 
 extends Node # Needed to work as a singleton
 
+signal logged
+
 ##================##
 ## Inner classes  ##
 ##================##
@@ -262,7 +264,7 @@ var modules = {}
 ##  Functions  ##
 ##=============##
 
-func put(level, message, module = "main"):
+func put(level, message, module = "main"):	
 	"""Log a message in the given module with the given logging level."""
 	var module_ref = get_module(module)
 	var output_strategy = module_ref.get_output_strategy(level)
@@ -270,6 +272,7 @@ func put(level, message, module = "main"):
 		return # Out of scope
 
 	var output = format(output_format, level, module, message)
+	emit_signal("logged", output, message, module, level)
 
 	if output_strategy & STRATEGY_PRINT:
 		print(output)
