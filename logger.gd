@@ -440,8 +440,11 @@ func get_default_output_level():
 # Output formatting
 # -----------------
 static func formatted_datetime():
-	var d = OS.get_datetime()
-	return "%d-%0*d-%0*d_%0*d:%0*d:%0*d" % [ d["year"], 2, d["month"], 2, d["day"], 2, d["hour"], 2, d["minute"], 2, d["second"] ]
+	var msec = OS.get_system_time_msecs()
+	var secs = floor(msec / 1000.0)
+	var rest = msec % 1000
+	var d = OS.get_datetime_from_unix_time(secs)
+	return "%d-%0*d-%0*d_%0*d:%0*d:%0*d:%0*d" % [ d["year"], 2, d["month"], 2, d["day"], 2, d["hour"], 2, d["minute"], 2, d["second"], 3, rest ]
 
 static func format(template, level, module, message):
 	var output = template
