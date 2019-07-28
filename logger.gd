@@ -123,7 +123,7 @@ class Module:
 		set_output_level(_output_level)
 
 		if typeof(_output_strategies) == TYPE_INT: # Only one strategy, use it for all
-			for i in range(0, LEVELS.size()):
+			for _i in range(0, LEVELS.size()):
 				output_strategies.append(_output_strategies)
 		else:
 			for strategy in _output_strategies: # Need to force deep copy
