@@ -607,16 +607,23 @@ func load_config(configfile = default_configfile_path):
 
 	# Load logfiles config and initialize them
 	logfiles = {}
-	for logfile_cfg in config.get_value(PLUGIN_NAME, "logfiles"):
-		var logfile = Logfile.new(logfile_cfg["path"], logfile_cfg["queue_mode"])
-		logfiles[logfile_cfg["path"]] = logfile
+	add_logfile(default_logfile_path)
+	
+	if config.get_value(PLUGIN_NAME, "logfiles"):
+		for logfile_cfg in config.get_value(PLUGIN_NAME, "logfiles"):
+			var logfile = Logfile.new(logfile_cfg["path"], logfile_cfg["queue_mode"])
+			logfiles[logfile_cfg["path"]] = logfile
 
 	# Load modules config and initialize them
 	modules = {}
-	for module_cfg in config.get_value(PLUGIN_NAME, "modules"):
-		var module = Module.new(module_cfg["name"], module_cfg["output_level"], \
-				module_cfg["output_strategies"], get_logfile(module_cfg["logfile_path"]))
-		modules[module_cfg["name"]] = module
+	add_module(PLUGIN_NAME)
+	add_module("main")
+	
+	if config.get_value(PLUGIN_NAME, "modules"):
+		for module_cfg in config.get_value(PLUGIN_NAME, "modules"):
+			var module = Module.new(module_cfg["name"], module_cfg["output_level"], \
+					module_cfg["output_strategies"], get_logfile(module_cfg["logfile_path"]))
+			modules[module_cfg["name"]] = module
 
 	info("Successfully loaded the config from '%s'." % configfile, PLUGIN_NAME)
 	return OK
