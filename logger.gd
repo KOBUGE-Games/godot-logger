@@ -203,12 +203,13 @@ class Module:
 const PLUGIN_NAME = "logger"
 
 # Logging levels - the array and the integers should be matching
-const LEVELS = ["VERB", "DBUG", "INFO", "WARN", "ERR "]
+const LEVELS = ["VERB", "DBUG", "INFO", "WARN", "ERR ", "MUTE"]
 const VERBOSE = 0
 const DEBUG = 1
 const INFO = 2
 const WARN = 3
 const ERROR = 4
+const MUTE = 5
 
 # Output strategies
 const STRATEGY_MUTE = 0
@@ -270,6 +271,8 @@ func put(level, message, module = "main"):
 	var output_strategy = module_ref.get_output_strategy(level)
 	if output_strategy == STRATEGY_MUTE or module_ref.get_output_level() > level:
 		return # Out of scope
+	if module_ref.output_level == MUTE:
+		return # Module muted
 
 	var output = format(output_format, level, module, message)
 	emit_signal("logged", output, message, module, level)
