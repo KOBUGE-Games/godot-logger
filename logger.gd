@@ -191,8 +191,7 @@ class Module:
 		return {
 			"name": get_name(),
 			"output_level": get_output_level(),
-			"output_strategies": get_output_strategy(),
-			"logfile_path": get_logfile().get_path()
+			"output_strategies": get_output_strategy()
 		}
 
 
@@ -241,7 +240,7 @@ const FILE_BUFFER_SIZE = 30
 var default_output_level = INFO
 # TODO: Find (or implement in Godot) a more clever way to achieve that
 var default_output_strategies = [STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT]
-var default_logfile_path = "user://%s-%s.log" % [ ProjectSettings.get_setting("application/config/name"), formatted_datetime() ]
+var default_logfile_path = "user://%s.log" % [ ProjectSettings.get_setting("application/config/name") ]
 var default_configfile_path = "user://%s.cfg" % PLUGIN_NAME
 
 # e.g. "[INFO] [main] The young alpaca started growing a goatie."
@@ -555,20 +554,11 @@ func save_config(configfile = default_configfile_path):
 	# Store default config
 	config.set_value(PLUGIN_NAME, "default_output_level", default_output_level)
 	config.set_value(PLUGIN_NAME, "default_output_strategies", default_output_strategies)
-	config.set_value(PLUGIN_NAME, "default_logfile_path", default_logfile_path)
 	config.set_value(PLUGIN_NAME, "max_memory_size", max_memory_size)
-
-	# Logfiles config
-	var logfiles_arr = []
-	var sorted_keys = logfiles.keys()
-	sorted_keys.sort() # Sadly doesn't return the array, so we need to split it
-	for logfile in sorted_keys:
-		logfiles_arr.append(logfiles[logfile].get_config())
-	config.set_value(PLUGIN_NAME, "logfiles", logfiles_arr)
 
 	# Modules config
 	var modules_arr = []
-	sorted_keys = modules.keys()
+	var sorted_keys = modules.keys()
 	sorted_keys.sort()
 	for module in sorted_keys:
 		modules_arr.append(modules[module].get_config())
@@ -605,18 +595,12 @@ func load_config(configfile = default_configfile_path):
 	# Load default config
 	default_output_level = config.get_value(PLUGIN_NAME, "default_output_level", default_output_level)
 	default_output_strategies = config.get_value(PLUGIN_NAME, "default_output_strategies", default_output_strategies)
-	default_logfile_path = config.get_value(PLUGIN_NAME, "default_logfile_path", default_logfile_path)
 	max_memory_size = config.get_value(PLUGIN_NAME, "max_memory_size", max_memory_size)
 
 	# Load logfiles config and initialize them
 	logfiles = {}
 	add_logfile(default_logfile_path)
 	
-	if config.get_value(PLUGIN_NAME, "logfiles"):
-		for logfile_cfg in config.get_value(PLUGIN_NAME, "logfiles"):
-			var logfile = Logfile.new(logfile_cfg["path"], logfile_cfg["queue_mode"])
-			logfiles[logfile_cfg["path"]] = logfile
-
 	# Load modules config and initialize them
 	modules = {}
 	add_module(PLUGIN_NAME)
@@ -625,7 +609,7 @@ func load_config(configfile = default_configfile_path):
 	if config.get_value(PLUGIN_NAME, "modules"):
 		for module_cfg in config.get_value(PLUGIN_NAME, "modules"):
 			var module = Module.new(module_cfg["name"], module_cfg["output_level"], \
-					module_cfg["output_strategies"], get_logfile(module_cfg["logfile_path"]))
+					module_cfg["output_strategies"], get_logfile(default_logfile_path))
 			modules[module_cfg["name"]] = module
 
 	info("Successfully loaded the config from '%s'." % configfile, PLUGIN_NAME)
