@@ -7,6 +7,8 @@
 extends Node # Needed to work as a singleton
 
 signal logged
+signal module_added
+signal module_modified
 
 ##================##
 ## Inner classes  ##
@@ -112,6 +114,8 @@ class Logfile:
 
 
 class Module:
+	signal modified
+	
 	# """Class for customizable logging modules."""
 	var name = ""
 	var output_level = 0
@@ -144,6 +148,7 @@ class Module:
 					% [PLUGIN_NAME, LEVELS.size() - 1])
 			return
 		output_level = level
+		emit_signal("modified")
 
 	func get_output_level():
 		return output_level
@@ -156,6 +161,7 @@ class Module:
 			return
 		for i in range(0, LEVELS.size()):
 			output_strategies[i] = output_strategy_mask
+		emit_signal("modified")
 
 	func set_output_strategy(output_strategy_mask, level = -1):
 		"""Set the output strategy for the given level or (by default) all
@@ -173,6 +179,7 @@ class Module:
 						% [PLUGIN_NAME, LEVELS.size() - 1])
 				return
 			output_strategies[level] = output_strategy_mask
+		emit_signal("modified")
 
 	func get_output_strategy(level = -1):
 		if level == -1:
@@ -183,6 +190,7 @@ class Module:
 	func set_logfile(new_logfile):
 		"""Set the Logfile instance for the module."""
 		logfile = new_logfile
+		emit_signal("modified")
 
 	func get_logfile():
 		return logfile
@@ -315,6 +323,8 @@ func error(message, module = "main"):
 
 # Module management
 # -----------------
+func connect_module(module):
+	module.connect("modified", self, "emit_signal", [ "module_modified", module ])
 
 func add_module(name, output_level = default_output_level, \
 		output_strategies = default_output_strategies, logfile = null):
@@ -328,6 +338,8 @@ func add_module(name, output_level = default_output_level, \
 		if logfile == null:
 			logfile = get_logfile(default_logfile_path)
 		modules[name] = Module.new(name, output_level, output_strategies, logfile)
+		connect_module(modules[name])
+		emit_signal("module_added", name)
 	return modules[name]
 
 func get_module(module = "main"):
@@ -611,6 +623,7 @@ func load_config(configfile = default_configfile_path):
 			var module = Module.new(module_cfg["name"], module_cfg["output_level"], \
 					module_cfg["output_strategies"], get_logfile(default_logfile_path))
 			modules[module_cfg["name"]] = module
+			connect_module(module)
 
 	info("Successfully loaded the config from '%s'." % configfile, PLUGIN_NAME)
 	return OK
