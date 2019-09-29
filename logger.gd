@@ -171,8 +171,9 @@ class Module:
 					% [PLUGIN_NAME, MAX_STRATEGY])
 			return
 		if level == -1: # Set for all levels
+			output_strategies = []
 			for i in range(0, LEVELS.size()):
-				output_strategies[i] = output_strategy_mask
+				output_strategies.append(output_strategy_mask)
 		else:
 			if not level in range(0, LEVELS.size()):
 				print("[ERROR] [%s] The level must be comprised between 0 and %d." \
@@ -247,7 +248,7 @@ const FILE_BUFFER_SIZE = 30
 # Configuration
 var default_output_level = INFO
 # TODO: Find (or implement in Godot) a more clever way to achieve that
-var default_output_strategies = [STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT]
+var default_output_strategies = [STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT ]
 var default_logfile_path = "user://%s.log" % [ ProjectSettings.get_setting("application/config/name") ]
 var default_configfile_path = "user://%s.cfg" % PLUGIN_NAME
 
@@ -416,8 +417,9 @@ func set_default_output_strategy(output_strategy_mask, level = -1):
 				% MAX_STRATEGY, PLUGIN_NAME)
 		return
 	if level == -1: # Set for all levels
+		default_output_strategies = []
 		for i in range(0, LEVELS.size()):
-			default_output_strategies[i] = output_strategy_mask
+			default_output_strategies.append(output_strategy_mask)
 		info("The default output strategy mask was set to '%d' for all levels." \
 				% [output_strategy_mask], PLUGIN_NAME)
 	else:
@@ -458,7 +460,7 @@ static func formatted_datetime():
 	var secs = floor(msec / 1000.0)
 	var rest = msec % 1000
 	var d = OS.get_datetime_from_unix_time(secs)
-	return "%d-%0*d-%0*d_%0*d:%0*d:%0*d:%0*d" % [ d["year"], 2, d["month"], 2, d["day"], 2, d["hour"], 2, d["minute"], 2, d["second"], 3, rest ]
+	return "%d-%0*d-%0*d_%0*d-%0*d-%0*d-%0*d" % [ d["year"], 2, d["month"], 2, d["day"], 2, d["hour"], 2, d["minute"], 2, d["second"], 3, rest ]
 
 static func format(template, level, module, message):
 	var output = template
