@@ -244,6 +244,9 @@ var default_configfile_path = "user://%s.cfg" % PLUGIN_NAME
 # e.g. "[INFO] [main] The young alpaca started growing a goatie."
 var output_format = "[{LVL}] [{MOD}] {MSG}"
 
+# Holds the name of the debug module for easy usage across all logging functions.
+var default_module_name = "main"
+
 # Specific to STRATEGY_MEMORY
 var max_memory_size = 30
 var memory_buffer = []
@@ -262,7 +265,7 @@ var modules = {}
 ##  Functions  ##
 ##=============##
 
-func put(level, message, module = "main"):
+func put(level, message, module = default_module_name):
 	"""Log a message in the given module with the given logging level."""
 	var module_ref = get_module(module)
 	var output_strategy = module_ref.get_output_strategy(level)
@@ -288,23 +291,23 @@ func put(level, message, module = "main"):
 # Helper functions for each level
 # -------------------------------
 
-func verbose(message, module = "main"):
+func verbose(message, module = default_module_name):
 	"""Log a message in the given module with level VERBOSE."""
 	put(VERBOSE, message, module)
 
-func debug(message, module = "main"):
+func debug(message, module = default_module_name):
 	"""Log a message in the given module with level DEBUG."""
 	put(DEBUG, message, module)
 
-func info(message, module = "main"):
+func info(message, module = default_module_name):
 	"""Log a message in the given module with level INFO."""
 	put(INFO, message, module)
 
-func warn(message, module = "main"):
+func warn(message, module = default_module_name):
 	"""Log a message in the given module with level WARN."""
 	put(WARN, message, module)
 
-func error(message, module = "main"):
+func error(message, module = default_module_name):
 	"""Log a message in the given module with level ERROR."""
 	put(ERROR, message, module)
 
@@ -325,7 +328,7 @@ func add_module(name, output_level = default_output_level, \
 		modules[name] = Module.new(name, output_level, output_strategies, logfile)
 	return modules[name]
 
-func get_module(module = "main"):
+func get_module(module = default_module_name):
 	"""Retrieve the given module if it exists; if not, it will be created."""
 	if not modules.has(module):
 		info("The requested module '%s' does not exist. It will be created with default values." \
@@ -621,7 +624,7 @@ func _init():
 	add_logfile(default_logfile_path)
 	# Default modules
 	add_module(PLUGIN_NAME) # needs to be instanced first
-	add_module("main")
+	add_module(default_module_name)
 	memory_buffer.resize(max_memory_size)
 
 func _exit_tree():
