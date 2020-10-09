@@ -22,6 +22,15 @@ singleton:
 
 Read the code for details about the API, it's extensively documented.
 
+
+Error Codes
+-----------
+
+All logging levels can also optionally include an [error code](https://docs.godotengine.org/en/stable/classes/class_@globalscope.html?#enum-globalscope-error), which will be mapped to the corresponding error message as of Godot 3.2.
+```
+Logger.error('failed to rotate the albatross', 'main', ERR_INVALID_DATA)
+```
+
 Licensing
 ---------
 
