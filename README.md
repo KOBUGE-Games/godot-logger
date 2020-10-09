@@ -31,10 +31,12 @@ relevant content.
 
 **Log format fields**:
 
-* `{LVL}`  = Level of the log
-* `{MOD}`  = Module that does the logging
-* `{MSG}`  = Message from the user
-* `{TIME}` = Timestamp when the logging occurred
+* `{LVL}`     = Level of the log
+* `{MOD}`     = Module that does the logging
+* `{MSG}`     = Message from the user
+* `{TIME}`    = Timestamp when the logging occurred
+* `{ERR_MSG}` = Error message corresponding to the error code, if provided.
+                It is automatically prepended with a space.
 
 The timestamp format can be configured for each module using the `time_format`
 property, with the placeholders described below.
@@ -47,6 +49,17 @@ property, with the placeholders described below.
 * `hh` = Hour
 * `mm` = Minute
 * `ss` = Second
+
+**Error codes:**
+
+All logging levels can also optionally include an
+[`Error` code](https://docs.godotengine.org/en/stable/classes/class_@globalscope.html?#enum-globalscope-error),
+which will be mapped to a human-readable error message.
+
+Example:
+```
+Logger.error("Failed to rotate the albatross", "main", ERR_INVALID_DATA)
+```
 
 ### Example
 
