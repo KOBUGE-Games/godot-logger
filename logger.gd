@@ -270,8 +270,8 @@ const MAX_STRATEGY = STRATEGY_MEMORY*2 - 1
 
 # Output format identifiers
 const FORMAT_IDS = {
-  "level": "{LVL}",
-  "module": "{MOD}",
+	"level": "{LVL}",
+	"module": "{MOD}",
 	"message": "{MSG}",
 	"error_message": "{ERR_MSG}",
 }
@@ -503,9 +503,9 @@ static func format(template, level, module, message, error_code = -1):
 	# Error message substitution
 	var error_message = error_messages.get(error_code)
 	if error_message != null:
-		output = output.replace(FORMAT_IDS.error_message, error_message)
+		output = output.replace(FORMAT_IDS.error_message, " " + error_message)
 	else:
-		output = output.replace(FORMAT_IDS.error_message, '')
+		output = output.replace(FORMAT_IDS.error_message, "")
 
 	return output
 
