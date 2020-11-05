@@ -274,6 +274,7 @@ const FORMAT_IDS = {
 	"module": "{MOD}",
 	"message": "{MSG}",
 	"error_message": "{ERR_MSG}",
+	"time": "{TIME}"
 }
 
 # Queue modes
@@ -292,11 +293,15 @@ const FILE_BUFFER_SIZE = 30
 var default_output_level = INFO
 # TODO: Find (or implement in Godot) a more clever way to achieve that
 var default_output_strategies = [STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT]
-var default_logfile_path = "user://%s.log" % ProjectSettings.get_setting("application/name")
+var default_logfile_path = "user://%s.log" % ProjectSettings.get_setting("application/config/name")
 var default_configfile_path = "user://%s.cfg" % PLUGIN_NAME
 
 # e.g. "[INFO] [main] The young alpaca started growing a goatie."
-var output_format = "[{LVL}] [{MOD}]{ERR_MSG} {MSG}"
+var output_format = "[{TIME}] [{LVL}] [{MOD}]{ERR_MSG} {MSG}"
+
+# Example with all supported placeholders: "YYYY.MM.DD hh.mm.ss"
+# would output e.g.: "2020.10.09 12:10:47".
+var time_format = "hh:mm:ss"
 
 # Holds the name of the debug module for easy usage across all logging functions.
 var default_module_name = "main"
@@ -494,19 +499,37 @@ func get_default_output_level():
 # Output formatting
 # -----------------
 
-static func format(template, level, module, message, error_code = -1):
+# Format the fields:
+# * YYYY = Year
+# * MM = Month
+# * DD = Day
+# * hh = Hour
+# * mm = Minutes
+# * ss = Seconds
+func get_formatted_datetime():
+	var datetime = OS.get_datetime()
+	var result = time_format
+	result = result.replacen("YYYY", "%04d" % [datetime.year])
+	result = result.replacen("MM", "%02d" % [datetime.month])
+	result = result.replacen("DD", "%02d" % [datetime.day])
+	result = result.replacen("hh", "%02d" % [datetime.hour])
+	result = result.replacen("mm", "%02d" % [datetime.minute])
+	result = result.replacen("ss", "%02d" % [datetime.second])
+	return result
+
+func format(template, level, module, message, error_code = -1):
 	var output = template
 	output = output.replace(FORMAT_IDS.level, LEVELS[level])
 	output = output.replace(FORMAT_IDS.module, module)
 	output = output.replace(FORMAT_IDS.message, message)
+  output = output.replace(FORMAT_IDS.time, get_formatted_datetime())
 
-	# Error message substitution
+  # Error message substitution
 	var error_message = error_messages.get(error_code)
 	if error_message != null:
 		output = output.replace(FORMAT_IDS.error_message, " " + error_message)
 	else:
 		output = output.replace(FORMAT_IDS.error_message, "")
-
 	return output
 
 func set_output_format(new_format):
