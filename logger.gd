@@ -221,7 +221,8 @@ const FORMAT_IDS = {
 	"level": "{LVL}",
 	"module": "{MOD}",
 	"message": "{MSG}",
-	"time": "{TIME}"
+	"time": "{TIME}",
+	"error_message": "{ERR_MSG}",
 }
 
 # Queue modes
@@ -231,6 +232,60 @@ const QUEUE_SMART = 2
 
 const FILE_BUFFER_SIZE = 30
 
+# Maps Error code to strings.
+# This might eventually be supported out of the box in Godot,
+# so we'll be able to drop this.
+const ERROR_MESSAGES = {
+	OK: "OK.",
+	FAILED: "Generic error.",
+	ERR_UNAVAILABLE: "Unavailable error.",
+	ERR_UNCONFIGURED: "Unconfigured error.",
+	ERR_UNAUTHORIZED: "Unauthorized error.",
+	ERR_PARAMETER_RANGE_ERROR: "Parameter range error.",
+	ERR_OUT_OF_MEMORY: "Out of memory (OOM) error.",
+	ERR_FILE_NOT_FOUND: "File: Not found error.",
+	ERR_FILE_BAD_DRIVE: "File: Bad drive error.",
+	ERR_FILE_BAD_PATH: "File: Bad path error.",
+	ERR_FILE_NO_PERMISSION: "File: No permission error.",
+	ERR_FILE_ALREADY_IN_USE: "File: Already in use error.",
+	ERR_FILE_CANT_OPEN: "File: Can't open error.",
+	ERR_FILE_CANT_WRITE: "File: Can't write error.",
+	ERR_FILE_CANT_READ: "File: Can't read error.",
+	ERR_FILE_UNRECOGNIZED: "File: Unrecognized error.",
+	ERR_FILE_CORRUPT: "File: Corrupt error.",
+	ERR_FILE_MISSING_DEPENDENCIES: "File: Missing dependencies error.",
+	ERR_FILE_EOF: "File: End of file (EOF) error.",
+	ERR_CANT_OPEN: "Can't open error.",
+	ERR_CANT_CREATE: "Can't create error.",
+	ERR_QUERY_FAILED: "Query failed error.",
+	ERR_ALREADY_IN_USE: "Already in use error.",
+	ERR_LOCKED: "Locked error.",
+	ERR_TIMEOUT: "Timeout error.",
+	ERR_CANT_CONNECT: "Can't connect error.",
+	ERR_CANT_RESOLVE: "Can't resolve error.",
+	ERR_CONNECTION_ERROR: "Connection error.",
+	ERR_CANT_ACQUIRE_RESOURCE: "Can't acquire resource error.",
+	ERR_CANT_FORK: "Can't fork process error.",
+	ERR_INVALID_DATA: "Invalid data error.",
+	ERR_INVALID_PARAMETER: "Invalid parameter error.",
+	ERR_ALREADY_EXISTS: "Already exists error.",
+	ERR_DOES_NOT_EXIST: "Does not exist error.",
+	ERR_DATABASE_CANT_READ: "Database: Read error.",
+	ERR_DATABASE_CANT_WRITE: "Database: Write error.",
+	ERR_COMPILATION_FAILED: "Compilation failed error.",
+	ERR_METHOD_NOT_FOUND: "Method not found error.",
+	ERR_LINK_FAILED: "Linking failed error.",
+	ERR_SCRIPT_FAILED: "Script failed error.",
+	ERR_CYCLIC_LINK: "Cycling link (import cycle) error.",
+	ERR_INVALID_DECLARATION: "Invalid declaration error.",
+	ERR_DUPLICATE_SYMBOL: "Duplicate symbol error.",
+	ERR_PARSE_ERROR: "Parse error.",
+	ERR_BUSY: "Busy error.",
+	ERR_SKIP: "Skip error.",
+	ERR_HELP: "Help error.",
+	ERR_BUG: "Bug error.",
+	ERR_PRINTER_ON_FIRE: "Printer on fire error.",
+}
 
 ##=============##
 ##  Variables  ##
@@ -244,7 +299,7 @@ var default_logfile_path = "user://%s.log" % ProjectSettings.get_setting("applic
 var default_configfile_path = "user://%s.cfg" % PLUGIN_NAME
 
 # e.g. "[INFO] [main] The young alpaca started growing a goatie."
-var output_format = "[{TIME}] [{LVL}] [{MOD}] {MSG}"
+var output_format = "[{TIME}] [{LVL}] [{MOD}]{ERR_MSG} {MSG}"
 # Example with all supported placeholders: "YYYY.MM.DD hh.mm.ss"
 # would output e.g.: "2020.10.09 12:10:47".
 var time_format = "hh:mm:ss"
@@ -270,14 +325,14 @@ var modules = {}
 ##  Functions  ##
 ##=============##
 
-func put(level, message, module = default_module_name):
+func put(level, message, module = default_module_name, error_code = -1):
 	"""Log a message in the given module with the given logging level."""
 	var module_ref = get_module(module)
 	var output_strategy = module_ref.get_output_strategy(level)
 	if output_strategy == STRATEGY_MUTE or module_ref.get_output_level() > level:
 		return # Out of scope
 
-	var output = format(output_format, level, module, message)
+	var output = format(output_format, level, module, message, error_code)
 
 	if output_strategy & STRATEGY_PRINT:
 		print(output)
@@ -296,25 +351,25 @@ func put(level, message, module = default_module_name):
 # Helper functions for each level
 # -------------------------------
 
-func verbose(message, module = default_module_name):
+func verbose(message, module = default_module_name, error_code = -1):
 	"""Log a message in the given module with level VERBOSE."""
-	put(VERBOSE, message, module)
+	put(VERBOSE, message, module, error_code)
 
-func debug(message, module = default_module_name):
+func debug(message, module = default_module_name, error_code = -1):
 	"""Log a message in the given module with level DEBUG."""
-	put(DEBUG, message, module)
+	put(DEBUG, message, module, error_code)
 
-func info(message, module = default_module_name):
+func info(message, module = default_module_name, error_code = -1):
 	"""Log a message in the given module with level INFO."""
-	put(INFO, message, module)
+	put(INFO, message, module, error_code)
 
-func warn(message, module = default_module_name):
+func warn(message, module = default_module_name, error_code = -1):
 	"""Log a message in the given module with level WARN."""
-	put(WARN, message, module)
+	put(WARN, message, module, error_code)
 
-func error(message, module = default_module_name):
+func error(message, module = default_module_name, error_code = -1):
 	"""Log a message in the given module with level ERROR."""
-	put(ERROR, message, module)
+	put(ERROR, message, module, error_code)
 
 # Module management
 # -----------------
@@ -463,12 +518,20 @@ func get_formatted_datetime():
 	result = result.replacen("ss", "%02d" % [datetime.second])
 	return result
 
-func format(template, level, module, message):
+func format(template, level, module, message, error_code = -1):
 	var output = template
 	output = output.replace(FORMAT_IDS.level, LEVELS[level])
 	output = output.replace(FORMAT_IDS.module, module)
 	output = output.replace(FORMAT_IDS.message, message)
 	output = output.replace(FORMAT_IDS.time, get_formatted_datetime())
+
+	# Error message substitution
+	var error_message = ERROR_MESSAGES.get(error_code)
+	if error_message != null:
+		output = output.replace(FORMAT_IDS.error_message, " " + error_message)
+	else:
+		output = output.replace(FORMAT_IDS.error_message, "")
+
 	return output
 
 func set_output_format(new_format):
