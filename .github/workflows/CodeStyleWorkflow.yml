@@ -57,3 +57,4 @@ jobs:
         run: |
           cp './.github/workflows/.gdlintrc' '.'
           gdlint logger.gd
+          echo "Done!"
