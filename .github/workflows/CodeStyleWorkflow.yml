@@ -27,7 +27,7 @@ jobs:
           pip install gdtoolkit
       - name: Format with gdformat
         run: |
-          gdformat --line-length=500 logger.gd
+          gdformat --line-length=150 logger.gd
       - name: Commit changes from formatting
         uses: stefanzweifel/git-auto-commit-action@v4.1.2
         with:
@@ -55,4 +55,5 @@ jobs:
           pip install gdtoolkit
       - name: Lint the code with gdlint
         run: |
+          cp './.github/workflows/.gdlintrc' '.'
           gdlint logger.gd
