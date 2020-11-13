@@ -45,7 +45,7 @@ class Logfile:
 	func validate_path(path):
 		"""Validate the path given as argument, making it possible to write to
 		the designated file or folder. Returns whether the path is valid."""
-		if ! (path.is_abs_path() or path.is_rel_path()):
+		if not (path.is_abs_path() or path.is_rel_path()):
 			print("[ERROR] [logger] The given path '%s' is not valid." % path)
 			return false
 		var dir = Directory.new()
