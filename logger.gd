@@ -4,11 +4,12 @@
 #
 # Upstream repo: https://github.com/KOBUGE-Games/godot-logger
 
-extends Node # Needed to work as a singleton
+extends Node  # Needed to work as a singleton
 
 ##================##
 ## Inner classes  ##
 ##================##
+
 
 class Logfile:
 	# TODO: Godot doesn't support docstrings for inner classes, GoDoIt (GH-1320)
@@ -37,14 +38,14 @@ class Logfile:
 
 	func get_write_mode():
 		if not file.file_exists(path):
-			return File.WRITE # create
+			return File.WRITE  # create
 		else:
-			return File.READ_WRITE # append
+			return File.READ_WRITE  # append
 
 	func validate_path(path):
 		"""Validate the path given as argument, making it possible to write to
 		the designated file or folder. Returns whether the path is valid."""
-		if !(path.is_abs_path() or path.is_rel_path()):
+		if ! (path.is_abs_path() or path.is_rel_path()):
 			print("[ERROR] [logger] The given path '%s' is not valid." % path)
 			return false
 		var dir = Directory.new()
@@ -53,8 +54,7 @@ class Logfile:
 			# TODO: Move directory creation to the function that will actually *write*
 			var err = dir.make_dir_recursive(base_dir)
 			if err:
-				print("[ERROR] [logger] Could not create the '%s' directory; exited with error %d." \
-						% [base_dir, err])
+				print("[ERROR] [logger] Could not create the '%s' directory; exited with error %d." % [base_dir, err])
 				return false
 			else:
 				print("[INFO] [logger] Successfully created the '%s' directory." % base_dir)
@@ -63,34 +63,32 @@ class Logfile:
 	func flush_buffer():
 		"""Flush the buffer, i.e. write its contents to the target file."""
 		if buffer_idx == 0:
-			return # Nothing to write
+			return  # Nothing to write
 		var err = file.open(path, get_write_mode())
 		if err:
-			print("[ERROR] [logger] Could not open the '%s' log file; exited with error %d." \
-					% [path, err])
+			print("[ERROR] [logger] Could not open the '%s' log file; exited with error %d." % [path, err])
 			return
 		file.seek_end()
 		for i in range(buffer_idx):
 			file.store_line(buffer[i])
 		file.close()
-		buffer_idx = 0 # We don't clear the memory, we'll just overwrite it
+		buffer_idx = 0  # We don't clear the memory, we'll just overwrite it
 
 	func write(output, level):
 		"""Write the string at the end of the file (append mode), following
 		the queue mode."""
 		var queue_action = queue_mode
 		if queue_action == QUEUE_SMART:
-			if level >= WARN: # Don't queue warnings and errors
+			if level >= WARN:  # Don't queue warnings and errors
 				queue_action = QUEUE_NONE
 				flush_buffer()
-			else: # Queue the log, not important enough for "smart"
+			else:  # Queue the log, not important enough for "smart"
 				queue_action = QUEUE_ALL
 
 		if queue_action == QUEUE_NONE:
 			var err = file.open(path, get_write_mode())
 			if err:
-				print("[ERROR] [logger] Could not open the '%s' log file; exited with error %d." \
-						% [path, err])
+				print("[ERROR] [logger] Could not open the '%s' log file; exited with error %d." % [path, err])
 				return
 			file.seek_end()
 			file.store_line(output)
@@ -103,7 +101,10 @@ class Logfile:
 				flush_buffer()
 
 	func get_config():
-		return {"path": get_path(), "queue_mode": get_queue_mode(),}
+		return {
+			"path": get_path(),
+			"queue_mode": get_queue_mode(),
+		}
 
 
 class Module:
@@ -117,11 +118,11 @@ class Module:
 		name = _name
 		set_output_level(_output_level)
 
-		if typeof(_output_strategies) == TYPE_INT: # Only one strategy, use it for all
+		if typeof(_output_strategies) == TYPE_INT:  # Only one strategy, use it for all
 			for i in range(0, LEVELS.size()):
 				output_strategies.append(_output_strategies)
 		else:
-			for strategy in _output_strategies: # Need to force deep copy
+			for strategy in _output_strategies:  # Need to force deep copy
 				output_strategies.append(strategy)
 
 		set_logfile(_logfile)
@@ -135,8 +136,7 @@ class Module:
 		on their respective strategies, while levels lower than the given one
 		will be discarded."""
 		if not level in range(0, LEVELS.size()):
-			print("[ERROR] [%s] The level must be comprised between 0 and %d." \
-					% [PLUGIN_NAME, LEVELS.size() - 1])
+			print("[ERROR] [%s] The level must be comprised between 0 and %d." % [PLUGIN_NAME, LEVELS.size() - 1])
 			return
 		output_level = level
 
@@ -146,8 +146,7 @@ class Module:
 	func set_common_output_strategy(output_strategy_mask):
 		"""Set the common output strategy mask for all levels of the module."""
 		if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
-			print("[ERROR] [%s] The output strategy mask must be comprised between 0 and %d." \
-					% [PLUGIN_NAME, MAX_STRATEGY])
+			print("[ERROR] [%s] The output strategy mask must be comprised between 0 and %d." % [PLUGIN_NAME, MAX_STRATEGY])
 			return
 		for i in range(0, LEVELS.size()):
 			output_strategies[i] = output_strategy_mask
@@ -156,16 +155,14 @@ class Module:
 		"""Set the output strategy for the given level or (by default) all
 		levels of the module."""
 		if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
-			print("[ERROR] [%s] The output strategy mask must be comprised between 0 and %d." \
-					% [PLUGIN_NAME, MAX_STRATEGY])
+			print("[ERROR] [%s] The output strategy mask must be comprised between 0 and %d." % [PLUGIN_NAME, MAX_STRATEGY])
 			return
-		if level == -1: # Set for all levels
+		if level == -1:  # Set for all levels
 			for i in range(0, LEVELS.size()):
 				output_strategies[i] = output_strategy_mask
 		else:
 			if not level in range(0, LEVELS.size()):
-				print("[ERROR] [%s] The level must be comprised between 0 and %d." \
-						% [PLUGIN_NAME, LEVELS.size() - 1])
+				print("[ERROR] [%s] The level must be comprised between 0 and %d." % [PLUGIN_NAME, LEVELS.size() - 1])
 				return
 			output_strategies[level] = output_strategy_mask
 
@@ -183,12 +180,12 @@ class Module:
 		return logfile
 
 	func get_config():
-		return  {
+		return {
 			"name": get_name(),
 			"output_level": get_output_level(),
 			"output_strategies": get_output_strategy(),
 			"logfile_path": get_logfile().get_path(),
-			}
+		}
 
 
 ##=============##
@@ -322,6 +319,7 @@ var modules = {}
 ##  Functions  ##
 ##=============##
 
+
 func put(level, message, module = default_module_name, error_code = -1):
 	"""Log a message in the given module with the given logging level."""
 	var module_ref = get_module(module)
@@ -345,28 +343,35 @@ func put(level, message, module = default_module_name, error_code = -1):
 			memory_idx = 0
 			memory_first_loop = false
 
+
 # Helper functions for each level
 # -------------------------------
+
 
 func verbose(message, module = default_module_name, error_code = -1):
 	"""Log a message in the given module with level VERBOSE."""
 	put(VERBOSE, message, module, error_code)
 
+
 func debug(message, module = default_module_name, error_code = -1):
 	"""Log a message in the given module with level DEBUG."""
 	put(DEBUG, message, module, error_code)
+
 
 func info(message, module = default_module_name, error_code = -1):
 	"""Log a message in the given module with level INFO."""
 	put(INFO, message, module, error_code)
 
+
 func warn(message, module = default_module_name, error_code = -1):
 	"""Log a message in the given module with level WARN."""
 	put(WARN, message, module, error_code)
 
+
 func error(message, module = default_module_name, error_code = -1):
 	"""Log a message in the given module with level ERROR."""
 	put(ERROR, message, module, error_code)
+
 
 # Module management
 # -----------------
@@ -407,17 +412,17 @@ func set_default_logfile_path(new_logfile_path, keep_old = false):
 	the optional keep_old argument, it will replace the logfile for all
 	modules which were configured for the previous logfile path."""
 	if new_logfile_path == default_logfile_path:
-		return # Nothing to do
+		return  # Nothing to do
 
 	var old_logfile = get_logfile(default_logfile_path)
 	var new_logfile = null
-	if logfiles.has(new_logfile_path): # Already exists
+	if logfiles.has(new_logfile_path):  # Already exists
 		new_logfile = logfiles[new_logfile_path]
-	else: # Create a new logfile
+	else:  # Create a new logfile
 		new_logfile = add_logfile(new_logfile_path)
 		logfiles[new_logfile_path] = new_logfile
 
-	if not keep_old: # Replace the old defaut logfile in all modules that used it
+	if not keep_old:  # Replace the old defaut logfile in all modules that used it
 		for module in modules.values():
 			if module.get_logfile() == old_logfile:
 				module.set_logfile(new_logfile)
@@ -462,21 +467,19 @@ func set_default_output_strategy(output_strategy_mask, level = -1):
 	"""Set the default output strategy mask of the given level or (by
 	default) all levels for all modules without a custom strategy."""
 	if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
-		error("The output strategy mask must be comprised between 0 and %d." \
-				% MAX_STRATEGY, PLUGIN_NAME)
+		error("The output strategy mask must be comprised between 0 and %d." % MAX_STRATEGY, PLUGIN_NAME)
 		return
-	if level == -1: # Set for all levels
+	if level == -1:  # Set for all levels
 		for i in range(0, LEVELS.size()):
 			default_output_strategies[i] = output_strategy_mask
-		info("The default output strategy mask was set to '%d' for all levels." \
-				% [output_strategy_mask], PLUGIN_NAME)
+		info("The default output strategy mask was set to '%d' for all levels." % [output_strategy_mask], PLUGIN_NAME)
 	else:
 		if not level in range(0, LEVELS.size()):
 			error("The level must be comprised between 0 and %d." % (LEVELS.size() - 1), PLUGIN_NAME)
 			return
 		default_output_strategies[level] = output_strategy_mask
-		info("The default output strategy mask was set to '%d' for the '%s' level." \
-				% [output_strategy_mask, LEVELS[level]], PLUGIN_NAME)
+		info("The default output strategy mask was set to '%d' for the '%s' level." % [output_strategy_mask, LEVELS[level]], PLUGIN_NAME)
+
 
 func get_default_output_strategy(level):
 	"""Get the default output strategy mask of the given level or (by
@@ -526,6 +529,7 @@ func get_formatted_datetime():
 	result = result.replacen("ss", "%02d" % [datetime.second])
 	return result
 
+
 func format(template, level, module, message, error_code = -1):
 	var output = template
 	output = output.replace(FORMAT_IDS.level, LEVELS[level])
@@ -550,8 +554,7 @@ func set_output_format(new_format):
 	"""
 	for key in FORMAT_IDS:
 		if new_format.find(FORMAT_IDS[key]) == -1:
-			error("Invalid output string format. It lacks the '%s' identifier." \
-					% FORMAT_IDS[key], PLUGIN_NAME)
+			error("Invalid output string format. It lacks the '%s' identifier." % FORMAT_IDS[key], PLUGIN_NAME)
 			return
 	output_format = new_format
 	info("Successfully changed the output format to '%s'." % output_format, PLUGIN_NAME)
@@ -570,8 +573,7 @@ func set_max_memory_size(new_size):
 	"""Set the maximum amount of messages to be remembered when
 	using the STRATEGY_MEMORY output strategy."""
 	if new_size <= 0:
-		error("The maximum amount of remembered messages must be a positive non-null integer. Received %d." \
-				% new_size, PLUGIN_NAME)
+		error("The maximum amount of remembered messages must be a positive non-null integer. Received %d." % new_size, PLUGIN_NAME)
 		return
 
 	var new_buffer = []
@@ -614,9 +616,9 @@ func get_max_memory_size():
 func get_memory():
 	"""Get an array of the messages remembered following STRATEGY_MEMORY.
 	The messages are sorted from the oldest to the newest."""
-	if invalid_memory_cache: # Need to recreate the cached ordered array
+	if invalid_memory_cache:  # Need to recreate the cached ordered array
 		memory_cache = []
-		if not memory_first_loop: # else those would be uninitialized
+		if not memory_first_loop:  # else those would be uninitialized
 			for i in range(memory_idx, max_memory_size):
 				memory_cache.append(memory_buffer[i])
 		for i in range(0, memory_idx):
@@ -654,7 +656,7 @@ func save_config(configfile = default_configfile_path):
 	# Logfiles config
 	var logfiles_arr = []
 	var sorted_keys = logfiles.keys()
-	sorted_keys.sort() # Sadly doesn't return the array, so we need to split it
+	sorted_keys.sort()  # Sadly doesn't return the array, so we need to split it
 	for logfile in sorted_keys:
 		logfiles_arr.append(logfiles[logfile].get_config())
 	config.set_value(PLUGIN_NAME, "logfiles", logfiles_arr)
@@ -670,8 +672,7 @@ func save_config(configfile = default_configfile_path):
 	# Save and return the corresponding error code
 	var err = config.save(configfile)
 	if err:
-		error("Could not save the config in '%s'; exited with error %d." \
-				% [configfile, err], PLUGIN_NAME)
+		error("Could not save the config in '%s'; exited with error %d." % [configfile, err], PLUGIN_NAME)
 		return err
 	info("Successfully saved the config to '%s'." % configfile, PLUGIN_NAME)
 	return OK
@@ -710,8 +711,9 @@ func load_config(configfile = default_configfile_path):
 	# Load modules config and initialize them
 	modules = {}
 	for module_cfg in config.get_value(PLUGIN_NAME, "modules"):
-		var module = Module.new(module_cfg["name"], module_cfg["output_level"], \
-				module_cfg["output_strategies"], get_logfile(module_cfg["logfile_path"]))
+		var module = Module.new(
+			module_cfg["name"], module_cfg["output_level"], module_cfg["output_strategies"], get_logfile(module_cfg["logfile_path"])
+		)
 		modules[module_cfg["name"]] = module
 
 	info("Successfully loaded the config from '%s'." % configfile, PLUGIN_NAME)
@@ -727,7 +729,7 @@ func _init():
 	# Default logfile
 	add_logfile(default_logfile_path)
 	# Default modules
-	add_module(PLUGIN_NAME) # needs to be instanced first
+	add_module(PLUGIN_NAME)  # needs to be instanced first
 	add_module(default_module_name)
 	memory_buffer.resize(max_memory_size)
 
