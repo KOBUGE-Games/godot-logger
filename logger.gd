@@ -6,6 +6,7 @@
 
 extends Node  # Needed to work as a singleton
 
+
 ##================##
 ## Inner classes  ##
 ##================##
@@ -27,30 +28,30 @@ class ExternalSink:
 		"""Write the string at the end of the sink (append mode), following
 		the queue mode."""
 		print("[ERROR] [logger] Using method which has to be overriden in your custom sink")
-	
+
 	func set_queue_mode(new_mode):
 		queue_mode = new_mode
 
 	func get_queue_mode():
 		return queue_mode
-		
+
 	func get_name():
 		return name
-	
+
 	func get_config():
 		return {
 			"queue_mode": get_queue_mode(),
 		}
 
 
-class Logfile extends ExternalSink:
+class Logfile:
+	extends ExternalSink
 	# TODO: Godot doesn't support docstrings for inner classes, GoDoIt (GH-1320)
 	# """Class for log files that can be shared between various modules."""
 	var file = null
 	var path = ""
 
-
-	func _init(_path, _queue_mode=QUEUE_NONE).(_path, _queue_mode):
+	func _init(_path, _queue_mode = QUEUE_NONE).(_path, _queue_mode):
 		file = File.new()
 		if validate_path(_path):
 			path = _path
@@ -129,6 +130,7 @@ class Logfile extends ExternalSink:
 			"queue_mode": get_queue_mode(),
 		}
 
+
 class Module:
 	# """Class for customizable logging modules."""
 	var name = ""
@@ -164,7 +166,7 @@ class Module:
 
 	func get_output_level():
 		return output_level
-	
+
 	func set_common_output_strategy(output_strategy_mask):
 		"""Set the common output strategy mask for all levels of the module."""
 		if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
@@ -246,7 +248,7 @@ const QUEUE_NONE = 0
 const QUEUE_ALL = 1
 const QUEUE_SMART = 2
 
-const FILE_BUFFER_SIZE = 30 # * TODO move ? @FILE
+const FILE_BUFFER_SIZE = 30  # * TODO move ? @FILE
 
 # Maps Error code to strings.
 # This might eventually be supported out of the box in Godot,
@@ -312,7 +314,7 @@ var default_output_level = INFO
 # TODO: Find (or implement in Godot) a more clever way to achieve that
 
 var default_output_strategies = [STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT]
-var default_logfile_path = "user://%s.log" % ProjectSettings.get_setting("application/config/name") # TODO @File
+var default_logfile_path = "user://%s.log" % ProjectSettings.get_setting("application/config/name")  # TODO @File
 var default_configfile_path = "user://%s.cfg" % PLUGIN_NAME
 
 # e.g. "[INFO] [main] The young alpaca started growing a goatie."
@@ -476,7 +478,7 @@ func get_external_sink(_external_sink_name):
 		return external_sinks[_external_sink_name]
 
 
-func get_external_sinks(): 
+func get_external_sinks():
 	"""Retrieve the dictionary containing all external sink."""
 	return external_sinks
 
@@ -527,7 +529,6 @@ func get_default_output_level():
 	"""Get the default minimal level for the output of all modules without
 	a custom output level."""
 	return default_output_level
-
 
 
 # Output formatting
@@ -728,7 +729,7 @@ func load_config(configfile = default_configfile_path):
 	# Load logfiles config and initialize them
 	external_sinks = {}
 	for logfile_cfg in config.get_value(PLUGIN_NAME, "logfiles"):
-		var logfile = Logfile.new(logfile_cfg["path"],logfile_cfg["queue_mode"])
+		var logfile = Logfile.new(logfile_cfg["path"], logfile_cfg["queue_mode"])
 		external_sinks[logfile_cfg["path"]] = logfile
 
 	# Load modules config and initialize them
