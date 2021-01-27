@@ -531,6 +531,8 @@ func get_formatted_datetime():
 
 
 func format(template, level, module, message, error_code = -1):
+	if typeof(message) == TYPE_OBJECT:
+		message = str(message)
 	var output = template
 	output = output.replace(FORMAT_IDS.level, LEVELS[level])
 	output = output.replace(FORMAT_IDS.module, module)
