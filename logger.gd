@@ -531,11 +531,10 @@ func get_formatted_datetime():
 
 
 func format(template, level, module, message, error_code = -1):
-	message = str(message)
 	var output = template
 	output = output.replace(FORMAT_IDS.level, LEVELS[level])
 	output = output.replace(FORMAT_IDS.module, module)
-	output = output.replace(FORMAT_IDS.message, message)
+	output = output.replace(FORMAT_IDS.message, str(message))
 	output = output.replace(FORMAT_IDS.time, get_formatted_datetime())
 
 	# Error message substitution
