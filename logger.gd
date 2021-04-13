@@ -479,7 +479,7 @@ func get_external_sink(_external_sink_name):
 
 
 func get_external_sinks():
-	"""Retrieve the dictionary containing all external sink."""
+	"""Retrieve the dictionary containing all external sinks."""
 	return external_sinks
 
 
