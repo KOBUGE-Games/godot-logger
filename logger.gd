@@ -10,6 +10,8 @@ extends Node  # Needed to work as a singleton
 ##================##
 ## Inner classes  ##
 ##================##
+
+
 class ExternalSink:
 	var name
 	var queue_mode = QUEUE_NONE
