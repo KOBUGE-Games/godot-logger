@@ -6,7 +6,6 @@
 
 extends Node  # Needed to work as a singleton
 
-
 ##================##
 ## Inner classes  ##
 ##================##
