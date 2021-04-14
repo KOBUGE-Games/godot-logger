@@ -12,12 +12,20 @@ extends Node  # Needed to work as a singleton
 
 
 class ExternalSink:
+
+	# Queue modes
+	enum QUEUE_MODES {
+		NONE = 0,
+		ALL = 1,
+		SMART = 2,
+	}
+
 	var name
-	var queue_mode = QUEUE_NONE
+	var queue_mode
 	var buffer = PoolStringArray()
 	var buffer_idx = 0
 
-	func _init(_name, _queue_mode = QUEUE_NONE) -> void:
+	func _init(_name, _queue_mode = QUEUE_MODES.NONE) -> void:
 		name = _name
 		queue_mode = _queue_mode
 
@@ -49,10 +57,11 @@ class Logfile:
 	extends ExternalSink
 	# TODO: Godot doesn't support docstrings for inner classes, GoDoIt (GH-1320)
 	# """Class for log files that can be shared between various modules."""
+	const FILE_BUFFER_SIZE = 30  
 	var file = null
 	var path = ""
 
-	func _init(_path, _queue_mode = QUEUE_NONE).(_path, _queue_mode):
+	func _init(_path, _queue_mode = QUEUE_MODES.NONE).(_path, _queue_mode):
 		file = File.new()
 		if validate_path(_path):
 			path = _path
@@ -103,14 +112,14 @@ class Logfile:
 		"""Write the string at the end of the file (append mode), following
 		the queue mode."""
 		var queue_action = queue_mode
-		if queue_action == QUEUE_SMART:
+		if queue_action == QUEUE_MODES.SMART:
 			if level >= WARN:  # Don't queue warnings and errors
-				queue_action = QUEUE_NONE
+				queue_action = QUEUE_MODES.NONE
 				flush_buffer()
 			else:  # Queue the log, not important enough for "smart"
-				queue_action = QUEUE_ALL
+				queue_action = QUEUE_MODES.ALL
 
-		if queue_action == QUEUE_NONE:
+		if queue_action == QUEUE_MODES.NONE:
 			var err = file.open(path, get_write_mode())
 			if err:
 				print("[ERROR] [logger] Could not open the '%s' log file; exited with error %d." % [path, err])
@@ -119,7 +128,7 @@ class Logfile:
 			file.store_line(output)
 			file.close()
 
-		if queue_action == QUEUE_ALL:
+		if queue_action == QUEUE_MODES.ALL:
 			buffer[buffer_idx] = output
 			buffer_idx += 1
 			if buffer_idx >= FILE_BUFFER_SIZE:
@@ -243,13 +252,6 @@ const FORMAT_IDS = {
 	"time": "{TIME}",
 	"error_message": "{ERR_MSG}",
 }
-
-# Queue modes
-const QUEUE_NONE = 0
-const QUEUE_ALL = 1
-const QUEUE_SMART = 2
-
-const FILE_BUFFER_SIZE = 30  # * TODO move ? @FILE
 
 # Maps Error code to strings.
 # This might eventually be supported out of the box in Godot,
@@ -466,7 +468,7 @@ func add_logfile(logfile_path = default_logfile_path):
 	if external_sinks.has(logfile_path):
 		info("A logfile pointing to '%s' already exists; discarding the call to add it anew." % logfile_path, PLUGIN_NAME)
 	else:
-		external_sinks[logfile_path] = Logfile.new(logfile_path, null)
+		external_sinks[logfile_path] = Logfile.new(logfile_path)
 	return external_sinks[logfile_path]
 
 
