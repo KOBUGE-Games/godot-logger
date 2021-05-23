@@ -664,7 +664,7 @@ func clear_memory():
 # Configuration loading/saving
 # ----------------------------
 
-const config_fields := {
+const CONFIG_FIELDS := {
 	default_output_level = "default_output_level",
 	default_output_strategies = "default_output_strategies",
 	default_logfile_path = "default_logfile_path",
@@ -683,10 +683,10 @@ func save_config(configfile = default_configfile_path):
 	var config = ConfigFile.new()
 
 	# Store default config
-	config.set_value(PLUGIN_NAME, config_fields.default_output_level, default_output_level)
-	config.set_value(PLUGIN_NAME, config_fields.default_output_strategies, default_output_strategies)
-	config.set_value(PLUGIN_NAME, config_fields.default_logfile_path, default_logfile_path)
-	config.set_value(PLUGIN_NAME, config_fields.max_memory_size, max_memory_size)
+	config.set_value(PLUGIN_NAME, CONFIG_FIELDS.default_output_level, default_output_level)
+	config.set_value(PLUGIN_NAME, CONFIG_FIELDS.default_output_strategies, default_output_strategies)
+	config.set_value(PLUGIN_NAME, CONFIG_FIELDS.default_logfile_path, default_logfile_path)
+	config.set_value(PLUGIN_NAME, CONFIG_FIELDS.max_memory_size, max_memory_size)
 
 	# External sink config
 	var external_sinks_arr = []
@@ -694,7 +694,7 @@ func save_config(configfile = default_configfile_path):
 	sorted_keys.sort()  # Sadly doesn't return the array, so we need to split it
 	for external_sink in sorted_keys:
 		external_sinks_arr.append(external_sinks[external_sink].get_config())
-	config.set_value(PLUGIN_NAME, config_fields.external_sinks, external_sinks_arr)
+	config.set_value(PLUGIN_NAME, CONFIG_FIELDS.external_sinks, external_sinks_arr)
 
 	# Modules config
 	var modules_arr = []
@@ -702,7 +702,7 @@ func save_config(configfile = default_configfile_path):
 	sorted_keys.sort()
 	for module in sorted_keys:
 		modules_arr.append(modules[module].get_config())
-	config.set_value(PLUGIN_NAME, config_fields.modules, modules_arr)
+	config.set_value(PLUGIN_NAME, CONFIG_FIELDS.modules, modules_arr)
 
 	# Save and return the corresponding error code
 	var err = config.save(configfile)
@@ -732,14 +732,14 @@ func load_config(configfile = default_configfile_path):
 		return err
 
 	# Load default config
-	default_output_level = config.get_value(PLUGIN_NAME, config_fields.default_output_level, default_output_level)
-	default_output_strategies = config.get_value(PLUGIN_NAME, config_fields.default_output_strategies, default_output_strategies)
-	default_logfile_path = config.get_value(PLUGIN_NAME, config_fields.default_logfile_path, default_logfile_path)
-	max_memory_size = config.get_value(PLUGIN_NAME, config_fields.max_memory_size, max_memory_size)
+	default_output_level = config.get_value(PLUGIN_NAME, CONFIG_FIELDS.default_output_level, default_output_level)
+	default_output_strategies = config.get_value(PLUGIN_NAME, CONFIG_FIELDS.default_output_strategies, default_output_strategies)
+	default_logfile_path = config.get_value(PLUGIN_NAME, CONFIG_FIELDS.default_logfile_path, default_logfile_path)
+	max_memory_size = config.get_value(PLUGIN_NAME, CONFIG_FIELDS.max_memory_size, max_memory_size)
 
 	# Load external config and initialize them
 	external_sinks = {}
-	for logfile_cfg in config.get_value(PLUGIN_NAME, config_fields.external_sinks):
+	for logfile_cfg in config.get_value(PLUGIN_NAME, CONFIG_FIELDS.external_sinks):
 		var logfile = Logfile.new(logfile_cfg["path"], logfile_cfg["queue_mode"])
 		external_sinks[logfile_cfg["path"]] = logfile
 
