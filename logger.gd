@@ -747,7 +747,7 @@ func load_config(configfile = default_configfile_path):
 	modules = {}
 	for module_cfg in config.get_value(PLUGIN_NAME, "modules"):
 		var module = Module.new(
-			module_cfg["name"], module_cfg["output_level"], module_cfg["output_strategies"], get_external_sink(module_cfg["logfile_path"])
+			module_cfg["name"], module_cfg["output_level"], module_cfg["output_strategies"], get_external_sink(module_cfg["external_sink"]["path"])
 		)
 		modules[module_cfg["name"]] = module
 
