@@ -547,12 +547,12 @@ func get_default_output_level():
 func get_formatted_datetime():
 	var datetime = OS.get_datetime()
 	var result = time_format
-	result = result.replacen("YYYY", "%04d" % [datetime.year])
-	result = result.replacen("MM", "%02d" % [datetime.month])
-	result = result.replacen("DD", "%02d" % [datetime.day])
-	result = result.replacen("hh", "%02d" % [datetime.hour])
-	result = result.replacen("mm", "%02d" % [datetime.minute])
-	result = result.replacen("ss", "%02d" % [datetime.second])
+	result = result.replace("YYYY", "%04d" % [datetime.year])
+	result = result.replace("MM", "%02d" % [datetime.month])
+	result = result.replace("DD", "%02d" % [datetime.day])
+	result = result.replace("hh", "%02d" % [datetime.hour])
+	result = result.replace("mm", "%02d" % [datetime.minute])
+	result = result.replace("ss", "%02d" % [datetime.second])
 	return result
 
 
