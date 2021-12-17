@@ -450,8 +450,8 @@ func set_default_logfile_path(new_logfile_path, keep_old = false):
 
 	if not keep_old:  # Replace the old defaut logfile in all modules that used it
 		for module in modules.values():
-			if module.get_logfile() == old_logfile:
-				module.set_logfile(new_logfile)
+			if module.get_external_sink() == old_logfile:
+				module.set_external_sink(new_logfile)
 		external_sinks.erase(default_logfile_path)
 	default_logfile_path = new_logfile_path
 
