@@ -450,8 +450,8 @@ func set_default_logfile_path(new_logfile_path, keep_old = false):
 
 	if not keep_old:  # Replace the old defaut logfile in all modules that used it
 		for module in modules.values():
-			if module.get_logfile() == old_logfile:
-				module.set_logfile(new_logfile)
+			if module.get_external_sink() == old_logfile:
+				module.set_external_sink(new_logfile)
 		external_sinks.erase(default_logfile_path)
 	default_logfile_path = new_logfile_path
 
@@ -483,6 +483,18 @@ func get_external_sink(_external_sink_name):
 func get_external_sinks():
 	"""Retrieve the dictionary containing all external sinks."""
 	return external_sinks
+
+
+func flush_buffers():
+	"""Flush non-empty buffers."""
+	var processed_external_sinks = []
+	var external_sink = null
+	for module in modules:
+		external_sink = modules[module].get_external_sink()
+		if external_sink in processed_external_sinks:
+			continue
+		external_sink.flush_buffer()
+		processed_external_sinks.append(external_sink)
 
 
 # Default output configuration
@@ -738,14 +750,18 @@ func load_config(configfile = default_configfile_path):
 	max_memory_size = config.get_value(PLUGIN_NAME, config_fields.max_memory_size, max_memory_size)
 
 	# Load external config and initialize them
+	flush_buffers()
 	external_sinks = {}
-	for logfile_cfg in config.get_value(PLUGIN_NAME, config_fields.external_sinks):
+	add_logfile(default_logfile_path)
+	for logfile_cfg in config.get_value(PLUGIN_NAME, config_fields.external_sinks, []):
 		var logfile = Logfile.new(logfile_cfg["path"], logfile_cfg["queue_mode"])
 		external_sinks[logfile_cfg["path"]] = logfile
 
 	# Load modules config and initialize them
 	modules = {}
-	for module_cfg in config.get_value(PLUGIN_NAME, "modules"):
+	add_module(PLUGIN_NAME)
+	add_module(default_module_name)
+	for module_cfg in config.get_value(PLUGIN_NAME, config_fields.modules, []):
 		var module = Module.new(
 			module_cfg["name"], module_cfg["output_level"], module_cfg["output_strategies"], get_external_sink(module_cfg["external_sink"]["path"])
 		)
@@ -770,12 +786,4 @@ func _init():
 
 
 func _exit_tree():
-	# Flush non-empty buffers
-	var processed_external_sinks = []
-	var external_sink = null
-	for module in modules:
-		external_sink = modules[module].get_external_sink()
-		if external_sink in processed_external_sinks:
-			continue
-		external_sink.flush_buffer()
-		processed_external_sinks.append(external_sink)
+	flush_buffers()
