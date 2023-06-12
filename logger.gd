@@ -21,7 +21,7 @@ class ExternalSink:
 
 	var name
 	var queue_mode
-	var buffer = PoolStringArray()
+	var buffer = PackedStringArray()
 	var buffer_idx = 0
 
 	func _init(_name, _queue_mode = QUEUE_MODES.NONE) -> void:
@@ -60,8 +60,9 @@ class Logfile:
 	var file = null
 	var path = ""
 
-	func _init(_path, _queue_mode = QUEUE_MODES.NONE).(_path, _queue_mode):
-		file = File.new()
+	func _init(_path, _queue_mode = QUEUE_MODES.NONE):
+		super(_path, _queue_mode)
+		file = FileAccess
 		if validate_path(_path):
 			path = _path
 		buffer.resize(FILE_BUFFER_SIZE)
@@ -70,20 +71,20 @@ class Logfile:
 		return path
 
 	func get_write_mode():
-		if not file.file_exists(path):
-			return File.WRITE  # create
+		if not FileAccess.file_exists(path):
+			return FileAccess.WRITE  # create
 		else:
-			return File.READ_WRITE  # append
+			return FileAccess.READ_WRITE  # append
 
 	func validate_path(path):
 		"""Validate the path given as argument, making it possible to write to
 		the designated file or folder. Returns whether the path is valid."""
-		if not (path.is_abs_path() or path.is_rel_path()):
+		if not (path.is_absolute_path() or path.is_rel_path()):
 			print("[ERROR] [logger] The given path '%s' is not valid." % path)
 			return false
-		var dir = Directory.new()
 		var base_dir = path.get_base_dir()
-		if not dir.dir_exists(base_dir):
+		var dir = DirAccess.open(base_dir)
+		if not dir:
 			# TODO: Move directory creation to the function that will actually *write*
 			var err = dir.make_dir_recursive(base_dir)
 			if err:
@@ -557,7 +558,7 @@ func get_default_output_level():
 # * mm = Minutes
 # * ss = Seconds
 func get_formatted_datetime():
-	var datetime = OS.get_datetime()
+	var datetime = Time.get_datetime_dict_from_system()
 	var result = time_format
 	result = result.replace("YYYY", "%04d" % [datetime.year])
 	result = result.replace("MM", "%02d" % [datetime.month])
@@ -731,8 +732,7 @@ func load_config(configfile = default_configfile_path):
 	produced by the ConfigFile API.
 	Returns an error code (OK or some ERR_*)."""
 	# Look for the file
-	var dir = Directory.new()
-	if not dir.file_exists(configfile):
+	if not FileAccess.file_exists(configfile):
 		warn("Could not load the config in '%s', the file does not exist." % configfile, PLUGIN_NAME)
 		return ERR_FILE_NOT_FOUND
 
