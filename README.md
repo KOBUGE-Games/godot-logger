@@ -1,16 +1,14 @@
-Logger - Logging singleton for Godot Engine
+Godot Logger - Logging Addon for Godot Engine
 ===========================================
 
-The *Logger* class is a GDScript singleton that provides a logging API for
+The *Godot Logger* is a plugin that provides a logging API for
 projects developed with [Godot Engine](https://godotengine.org).
 
 # Usage
 
-Copy the `logger.gd` file into your project folder, and define it as an autoloaded
-singleton in your project's settings (e.g. with the name *Logger*):
-```
-Logger="*res://logger.gd"
-```
+1. Clone or extract this repository as the `res://addons/godot-logger` folder in your project.
+2. Enable the addon from  Project -> Project Settings -> Plugins -> Godot Logger.
+3. An autoloaded script will be added to your project singletons list as `Logger`.
 
 The methods of the API can then be accessed from any other script via the *Logger*
 singleton:
