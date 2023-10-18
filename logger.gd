@@ -57,12 +57,10 @@ class Logfile:
 	# TODO: Godot doesn't support docstrings for inner classes, GoDoIt (GH-1320)
 	# """Class for log files that can be shared between various modules."""
 	const FILE_BUFFER_SIZE = 30
-	var file = null
 	var path = ""
 
 	func _init(_path, _queue_mode = QUEUE_MODES.NONE):
 		super(_path, _queue_mode)
-		file = FileAccess
 		if validate_path(_path):
 			path = _path
 		buffer.resize(FILE_BUFFER_SIZE)
@@ -85,12 +83,18 @@ class Logfile:
 		var base_dir = path.get_base_dir()
 		var dir = DirAccess.open(base_dir)
 		if not dir:
-			# TODO: Move directory creation to the function that will actually *write*
-			var err = dir.make_dir_recursive(base_dir)
+			var err = DirAccess.get_open_error()
 			if err:
 				print("[ERROR] [logger] Could not create the '%s' directory; exited with error %d." % [base_dir, err])
 				return false
 			else:
+				# TODO: Move directory creation to the function that will actually *write*
+				dir.make_dir_recursive(base_dir)
+				var err2 = DirAccess.get_open_error()
+				if err2:
+					print("[ERROR] [logger] Could not create the '%s' directory; exited with error %d." % [base_dir, err2])
+					return false
+
 				print("[INFO] [logger] Successfully created the '%s' directory." % base_dir)
 		return true
 
@@ -98,15 +102,13 @@ class Logfile:
 		"""Flush the buffer, i.e. write its contents to the target file."""
 		if buffer_idx == 0:
 			return  # Nothing to write
-		var err = file.open(path, get_write_mode())
-		if err:
-			print("[ERROR] [logger] Could not open the '%s' log file; exited with error %d." % [path, err])
-			return
-		file.seek_end()
-		for i in range(buffer_idx):
-			file.store_line(buffer[i])
-		file.close()
-		buffer_idx = 0  # We don't clear the memory, we'll just overwrite it
+		var temp_file = _open_file(path)
+		if temp_file:
+			temp_file.seek_end()
+			for i in range(buffer_idx):
+				temp_file.store_line(buffer[i])
+			temp_file.close()
+			buffer_idx = 0  # We don't clear the memory, we'll just overwrite it
 
 	func write(output, level):
 		"""Write the string at the end of the file (append mode), following
@@ -120,13 +122,13 @@ class Logfile:
 				queue_action = QUEUE_MODES.ALL
 
 		if queue_action == QUEUE_MODES.NONE:
-			var err = file.open(path, get_write_mode())
-			if err:
-				print("[ERROR] [logger] Could not open the '%s' log file; exited with error %d." % [path, err])
+			var temp_file = _open_file(path)
+			if temp_file == null:
 				return
-			file.seek_end()
-			file.store_line(output)
-			file.close()
+			else:
+				temp_file.seek_end()
+				temp_file.store_line(output)
+				temp_file.close()
 
 		if queue_action == QUEUE_MODES.ALL:
 			buffer[buffer_idx] = output
@@ -139,6 +141,16 @@ class Logfile:
 			"path": get_path(),
 			"queue_mode": get_queue_mode(),
 		}
+
+	func _open_file(path):
+		var result = FileAccess.open(path, get_write_mode())
+
+		if result == null:
+			var err = FileAccess.get_open_error()
+			print("[ERROR] [logger] Could not open the '%s' log file; exited with error %d." % [path, err])
+			return null
+		else:
+			return result
 
 
 class Module:
