@@ -241,12 +241,13 @@ class Module:
 const PLUGIN_NAME = "logger"
 
 # Logging levels - the array and the integers should be matching
-const LEVELS = ["VERBOSE", "DEBUG", "INFO", "WARN", "ERROR"]
+const LEVELS = ["VERBOSE", "DEBUG", "INFO", "SUCCESS", "WARN", "ERROR"]
 const VERBOSE = 0
 const DEBUG = 1
 const INFO = 2
-const WARN = 3
-const ERROR = 4
+const SUCCESS = 3
+const WARN = 4
+const ERROR = 5
 
 # Output strategies
 const STRATEGY_MUTE = 0
@@ -259,10 +260,21 @@ const MAX_STRATEGY = STRATEGY_MEMORY * 2 - 1
 # Output format identifiers
 const FORMAT_IDS = {
 	"level": "{LVL}",
+	"stack_trace": "{STACK_TRACE}",
 	"module": "{MOD}",
 	"message": "{MSG}",
 	"time": "{TIME}",
 	"error_message": "{ERR_MSG}",
+}
+
+# Output colors (BBCode)
+const LVL_COLORS = {
+	0: "grey",
+	1: "purple", 
+	2: "darkgray",
+	3: "green", 
+	4: "orange", 
+	5: "red",
 }
 
 # Maps Error code to strings.
@@ -333,8 +345,7 @@ var default_logfile_path = "user://%s.log" % ProjectSettings.get_setting("applic
 var default_configfile_path = "user://%s.cfg" % PLUGIN_NAME
 
 # e.g. "[INFO] [main] The young alpaca started growing a goatie."
-var output_format = "[{TIME}] [{LVL}] [{MOD}]{ERR_MSG} {MSG}"
-# Example with all supported placeholders: "YYYY.MM.DD hh.mm.ss"
+var output_format = "[{TIME}] {LVL} | {STACK_TRACE} | {ERR_MSG} {MSG}"# Example with all supported placeholders: "YYYY.MM.DD hh.mm.ss"
 # would output e.g.: "2020.10.09 12:10:47".
 var time_format = "hh:mm:ss"
 
@@ -366,10 +377,13 @@ func put(level, message, module = default_module_name, error_code = -1):
 	if output_strategy == STRATEGY_MUTE or module_ref.get_output_level() > level:
 		return  # Out of scope
 
-	var output = format(output_format, level, module, message, error_code)
+	var stack_trace = _get_stack_frame()
+	var output = format(output_format, level, stack_trace, module, message, error_code)
 
 	if output_strategy & STRATEGY_PRINT:
-		print(output)
+		var lvl_color = LVL_COLORS[level]
+		var format_string = "[color=%s] %s"
+		print_rich(format_string % [lvl_color, output])
 
 	if output_strategy & STRATEGY_EXTERNAL_SINK:
 		module_ref.get_external_sink().write(output, level)
@@ -381,6 +395,24 @@ func put(level, message, module = default_module_name, error_code = -1):
 		if memory_idx >= max_memory_size:
 			memory_idx = 0
 			memory_first_loop = false
+
+			
+func _get_stack_frame() -> String:
+	"""
+	Finds the stack trace from which the Logger call orignates
+	
+	Returns: String indicating script, function and line number (e.g. state.gd:enter:8)
+	"""
+	var _stack = get_stack()
+	if _stack.size() < 4:
+		push_error("Minimum size of stack not met (exp. 3+1 min. entries")
+	var _trace = _stack[3]
+	var source = _trace["source"].split("/")[-1]
+	var function = _trace["function"]
+	var line =  _trace["line"]
+	var stack_trace = "%s:%s:%s" % [source, function, line]
+	
+	return stack_trace
 
 
 # Helper functions for each level
@@ -400,6 +432,11 @@ func debug(message, module = default_module_name, error_code = -1):
 func info(message, module = default_module_name, error_code = -1):
 	"""Log a message in the given module with level INFO."""
 	put(INFO, message, module, error_code)
+
+
+func success(message, module = default_module_name, error_code = -1):
+	"""Log a message in the given module with level ERROR."""
+	put(SUCCESS, message, module, error_code)
 
 
 func warn(message, module = default_module_name, error_code = -1):
@@ -581,9 +618,10 @@ func get_formatted_datetime():
 	return result
 
 
-func format(template, level, module, message, error_code = -1):
+func format(template, level, stack_trace, module, message, error_code = -1):
 	var output = template
 	output = output.replace(FORMAT_IDS.level, LEVELS[level])
+	output = output.replace(FORMAT_IDS.stack_trace, stack_trace)
 	output = output.replace(FORMAT_IDS.module, module)
 	output = output.replace(FORMAT_IDS.message, str(message))
 	output = output.replace(FORMAT_IDS.time, get_formatted_datetime())
