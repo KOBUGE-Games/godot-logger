@@ -85,14 +85,24 @@ class Logfile:
 		if not dir:
 			var err = DirAccess.get_open_error()
 			if err:
-				print("[ERROR] [logger] Could not create the '%s' directory; exited with error %d." % [base_dir, err])
+				print(
+					(
+						"[ERROR] [logger] Could not create the '%s' directory; exited with error %d."
+						% [base_dir, err]
+					)
+				)
 				return false
 			else:
 				# TODO: Move directory creation to the function that will actually *write*
 				dir.make_dir_recursive(base_dir)
 				var err2 = DirAccess.get_open_error()
 				if err2:
-					print("[ERROR] [logger] Could not create the '%s' directory; exited with error %d." % [base_dir, err2])
+					print(
+						(
+							"[ERROR] [logger] Could not create the '%s' directory; exited with error %d."
+							% [base_dir, err2]
+						)
+					)
 					return false
 
 				print("[INFO] [logger] Successfully created the '%s' directory." % base_dir)
@@ -147,7 +157,12 @@ class Logfile:
 
 		if result == null:
 			var err = FileAccess.get_open_error()
-			print("[ERROR] [logger] Could not open the '%s' log file; exited with error %d." % [path, err])
+			print(
+				(
+					"[ERROR] [logger] Could not open the '%s' log file; exited with error %d."
+					% [path, err]
+				)
+			)
 			return null
 		else:
 			return result
@@ -182,7 +197,12 @@ class Module:
 		on their respective strategies, while levels lower than the given one
 		will be discarded."""
 		if not level in range(0, LEVELS.size()):
-			print("[ERROR] [%s] The level must be comprised between 0 and %d." % [PLUGIN_NAME, LEVELS.size() - 1])
+			print(
+				(
+					"[ERROR] [%s] The level must be comprised between 0 and %d."
+					% [PLUGIN_NAME, LEVELS.size() - 1]
+				)
+			)
 			return
 		output_level = level
 
@@ -192,7 +212,12 @@ class Module:
 	func set_common_output_strategy(output_strategy_mask):
 		"""Set the common output strategy mask for all levels of the module."""
 		if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
-			print("[ERROR] [%s] The output strategy mask must be comprised between 0 and %d." % [PLUGIN_NAME, MAX_STRATEGY])
+			print(
+				(
+					"[ERROR] [%s] The output strategy mask must be comprised between 0 and %d."
+					% [PLUGIN_NAME, MAX_STRATEGY]
+				)
+			)
 			return
 		for i in range(0, LEVELS.size()):
 			output_strategies[i] = output_strategy_mask
@@ -201,14 +226,24 @@ class Module:
 		"""Set the output strategy for the given level or (by default) all
 		levels of the module."""
 		if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
-			print("[ERROR] [%s] The output strategy mask must be comprised between 0 and %d." % [PLUGIN_NAME, MAX_STRATEGY])
+			print(
+				(
+					"[ERROR] [%s] The output strategy mask must be comprised between 0 and %d."
+					% [PLUGIN_NAME, MAX_STRATEGY]
+				)
+			)
 			return
 		if level == -1:  # Set for all levels
 			for i in range(0, LEVELS.size()):
 				output_strategies[i] = output_strategy_mask
 		else:
 			if not level in range(0, LEVELS.size()):
-				print("[ERROR] [%s] The level must be comprised between 0 and %d." % [PLUGIN_NAME, LEVELS.size() - 1])
+				print(
+					(
+						"[ERROR] [%s] The level must be comprised between 0 and %d."
+						% [PLUGIN_NAME, LEVELS.size() - 1]
+					)
+				)
 				return
 			output_strategies[level] = output_strategy_mask
 
@@ -328,7 +363,9 @@ const ERROR_MESSAGES = {
 var default_output_level = INFO
 # TODO: Find (or implement in Godot) a more clever way to achieve that
 
-var default_output_strategies = [STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT]
+var default_output_strategies = [
+	STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT
+]
 var default_logfile_path = "user://%s.log" % ProjectSettings.get_setting("application/config/name")  # TODO @File
 var default_configfile_path = "user://%s.cfg" % PLUGIN_NAME
 
@@ -416,12 +453,20 @@ func error(message, module = default_module_name, error_code = -1):
 # -----------------
 
 
-func add_module(name, output_level = default_output_level, output_strategies = default_output_strategies, logfile = null):
+func add_module(
+	name,
+	output_level = default_output_level,
+	output_strategies = default_output_strategies,
+	logfile = null
+):
 	"""Add a new module with the given parameter or (by default) the
 	default ones.
 	Returns a reference to the instanced module."""
 	if modules.has(name):
-		info("The module '%s' already exists; discarding the call to add it anew." % name, PLUGIN_NAME)
+		info(
+			"The module '%s' already exists; discarding the call to add it anew." % name,
+			PLUGIN_NAME
+		)
 	else:
 		if logfile == null:
 			logfile = get_external_sink(default_logfile_path)
@@ -432,7 +477,13 @@ func add_module(name, output_level = default_output_level, output_strategies = d
 func get_module(module = default_module_name):
 	"""Retrieve the given module if it exists; if not, it will be created."""
 	if not modules.has(module):
-		info("The requested module '%s' does not exist. It will be created with default values." % module, PLUGIN_NAME)
+		info(
+			(
+				"The requested module '%s' does not exist. It will be created with default values."
+				% module
+			),
+			PLUGIN_NAME
+		)
 		add_module(module)
 	return modules[module]
 
@@ -478,7 +529,13 @@ func add_logfile(logfile_path = default_logfile_path):
 	"""Add a new logfile that can then be attached to one or more modules.
 	Returns a reference to the instanced logfile."""
 	if external_sinks.has(logfile_path):
-		info("A logfile pointing to '%s' already exists; discarding the call to add it anew." % logfile_path, PLUGIN_NAME)
+		info(
+			(
+				"A logfile pointing to '%s' already exists; discarding the call to add it anew."
+				% logfile_path
+			),
+			PLUGIN_NAME
+		)
 	else:
 		external_sinks[logfile_path] = Logfile.new(logfile_path)
 	return external_sinks[logfile_path]
@@ -487,7 +544,10 @@ func add_logfile(logfile_path = default_logfile_path):
 func get_external_sink(_external_sink_name):
 	"""Retrieve the first given external sink if it exists, otherwise returns null."""
 	if not external_sinks.has(_external_sink_name):
-		warn("The requested external sink pointing to '%s' does not exist." % _external_sink_name, PLUGIN_NAME)
+		warn(
+			"The requested external sink pointing to '%s' does not exist." % _external_sink_name,
+			PLUGIN_NAME
+		)
 		return null
 	else:
 		return external_sinks[_external_sink_name]
@@ -518,18 +578,35 @@ func set_default_output_strategy(output_strategy_mask, level = -1):
 	"""Set the default output strategy mask of the given level or (by
 	default) all levels for all modules without a custom strategy."""
 	if not output_strategy_mask in range(0, MAX_STRATEGY + 1):
-		error("The output strategy mask must be comprised between 0 and %d." % MAX_STRATEGY, PLUGIN_NAME)
+		error(
+			"The output strategy mask must be comprised between 0 and %d." % MAX_STRATEGY,
+			PLUGIN_NAME
+		)
 		return
 	if level == -1:  # Set for all levels
 		for i in range(0, LEVELS.size()):
 			default_output_strategies[i] = output_strategy_mask
-		info("The default output strategy mask was set to '%d' for all levels." % [output_strategy_mask], PLUGIN_NAME)
+		info(
+			(
+				"The default output strategy mask was set to '%d' for all levels."
+				% [output_strategy_mask]
+			),
+			PLUGIN_NAME
+		)
 	else:
 		if not level in range(0, LEVELS.size()):
-			error("The level must be comprised between 0 and %d." % (LEVELS.size() - 1), PLUGIN_NAME)
+			error(
+				"The level must be comprised between 0 and %d." % (LEVELS.size() - 1), PLUGIN_NAME
+			)
 			return
 		default_output_strategies[level] = output_strategy_mask
-		info("The default output strategy mask was set to '%d' for the '%s' level." % [output_strategy_mask, LEVELS[level]], PLUGIN_NAME)
+		info(
+			(
+				"The default output strategy mask was set to '%d' for the '%s' level."
+				% [output_strategy_mask, LEVELS[level]]
+			),
+			PLUGIN_NAME
+		)
 
 
 func get_default_output_strategy(level):
@@ -605,7 +682,10 @@ func set_output_format(new_format):
 	"""
 	for key in FORMAT_IDS:
 		if new_format.find(FORMAT_IDS[key]) == -1:
-			error("Invalid output string format. It lacks the '%s' identifier." % FORMAT_IDS[key], PLUGIN_NAME)
+			error(
+				"Invalid output string format. It lacks the '%s' identifier." % FORMAT_IDS[key],
+				PLUGIN_NAME
+			)
 			return
 	output_format = new_format
 	info("Successfully changed the output format to '%s'." % output_format, PLUGIN_NAME)
@@ -624,7 +704,13 @@ func set_max_memory_size(new_size):
 	"""Set the maximum amount of messages to be remembered when
 	using the STRATEGY_MEMORY output strategy."""
 	if new_size <= 0:
-		error("The maximum amount of remembered messages must be a positive non-null integer. Received %d." % new_size, PLUGIN_NAME)
+		error(
+			(
+				"The maximum amount of remembered messages must be a positive non-null integer. Received %d."
+				% new_size
+			),
+			PLUGIN_NAME
+		)
 		return
 
 	var new_buffer = []
@@ -655,7 +741,10 @@ func set_max_memory_size(new_size):
 	memory_idx = new_idx
 	invalid_memory_cache = true
 	max_memory_size = new_size
-	info("Successfully set the maximum amount of remembered messages to %d." % max_memory_size, PLUGIN_NAME)
+	info(
+		"Successfully set the maximum amount of remembered messages to %d." % max_memory_size,
+		PLUGIN_NAME
+	)
 
 
 func get_max_memory_size():
@@ -709,7 +798,9 @@ func save_config(configfile = default_configfile_path):
 
 	# Store default config
 	config.set_value(PLUGIN_NAME, config_fields.default_output_level, default_output_level)
-	config.set_value(PLUGIN_NAME, config_fields.default_output_strategies, default_output_strategies)
+	config.set_value(
+		PLUGIN_NAME, config_fields.default_output_strategies, default_output_strategies
+	)
 	config.set_value(PLUGIN_NAME, config_fields.default_logfile_path, default_logfile_path)
 	config.set_value(PLUGIN_NAME, config_fields.max_memory_size, max_memory_size)
 
@@ -732,7 +823,10 @@ func save_config(configfile = default_configfile_path):
 	# Save and return the corresponding error code
 	var err = config.save(configfile)
 	if err:
-		error("Could not save the config in '%s'; exited with error %d." % [configfile, err], PLUGIN_NAME)
+		error(
+			"Could not save the config in '%s'; exited with error %d." % [configfile, err],
+			PLUGIN_NAME
+		)
 		return err
 	info("Successfully saved the config to '%s'." % configfile, PLUGIN_NAME)
 	return OK
@@ -745,20 +839,31 @@ func load_config(configfile = default_configfile_path):
 	Returns an error code (OK or some ERR_*)."""
 	# Look for the file
 	if not FileAccess.file_exists(configfile):
-		warn("Could not load the config in '%s', the file does not exist." % configfile, PLUGIN_NAME)
+		warn(
+			"Could not load the config in '%s', the file does not exist." % configfile, PLUGIN_NAME
+		)
 		return ERR_FILE_NOT_FOUND
 
 	# Load its contents
 	var config = ConfigFile.new()
 	var err = config.load(configfile)
 	if err:
-		warn("Could not load the config in '%s'; exited with error %d." % [configfile, err], PLUGIN_NAME)
+		warn(
+			"Could not load the config in '%s'; exited with error %d." % [configfile, err],
+			PLUGIN_NAME
+		)
 		return err
 
 	# Load default config
-	default_output_level = config.get_value(PLUGIN_NAME, config_fields.default_output_level, default_output_level)
-	default_output_strategies = config.get_value(PLUGIN_NAME, config_fields.default_output_strategies, default_output_strategies)
-	default_logfile_path = config.get_value(PLUGIN_NAME, config_fields.default_logfile_path, default_logfile_path)
+	default_output_level = config.get_value(
+		PLUGIN_NAME, config_fields.default_output_level, default_output_level
+	)
+	default_output_strategies = config.get_value(
+		PLUGIN_NAME, config_fields.default_output_strategies, default_output_strategies
+	)
+	default_logfile_path = config.get_value(
+		PLUGIN_NAME, config_fields.default_logfile_path, default_logfile_path
+	)
 	max_memory_size = config.get_value(PLUGIN_NAME, config_fields.max_memory_size, max_memory_size)
 
 	# Load external config and initialize them
@@ -775,7 +880,10 @@ func load_config(configfile = default_configfile_path):
 	add_module(default_module_name)
 	for module_cfg in config.get_value(PLUGIN_NAME, config_fields.modules, []):
 		var module = Module.new(
-			module_cfg["name"], module_cfg["output_level"], module_cfg["output_strategies"], get_external_sink(module_cfg["external_sink"]["path"])
+			module_cfg["name"],
+			module_cfg["output_level"],
+			module_cfg["output_strategies"],
+			get_external_sink(module_cfg["external_sink"]["path"])
 		)
 		modules[module_cfg["name"]] = module
 
