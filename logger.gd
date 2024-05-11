@@ -32,7 +32,7 @@ class ExternalSink:
 		"""Flush the buffer, i.e. write its contents to the target external sink."""
 		print("[ERROR] [logger] Using method which has to be overriden in your custom sink")
 
-	func write(output, level):
+	func write(_output, _level):
 		"""Write the string at the end of the sink (append mode), following
 		the queue mode."""
 		print("[ERROR] [logger] Using method which has to be overriden in your custom sink")
@@ -778,7 +778,7 @@ func clear_memory():
 # Configuration loading/saving
 # ----------------------------
 
-const config_fields := {
+const CONFIG_FIELDS := {
 	default_output_level = "default_output_level",
 	default_output_strategies = "default_output_strategies",
 	default_logfile_path = "default_logfile_path",

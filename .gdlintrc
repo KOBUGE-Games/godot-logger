@@ -18,7 +18,7 @@ comparison-with-itself: null
 constant-name: '[A-Z][A-Z0-9]*(_[A-Z0-9]+)*'
 duplicated-load: null
 enum-element-name: '[A-Z][A-Z0-9]*(_[A-Z0-9]+)*'
-enum-name: ([A-Z][a-z0-9]*)+
+enum-name: ([A-Z][_a-z0-9]*)+
 expression-not-assigned: null
 function-argument-name: _?[a-z][a-z0-9]*(_[a-z0-9]+)*
 function-arguments-number: 10
@@ -37,4 +37,4 @@ sub-class-name: _?([A-Z][a-z0-9]*)+
 trailing-whitespace: null
 unnecessary-pass: null
 unused-argument: null
-disable: [class-definitions-order, max-file-lines, max-line-length, max-public-methods]
+disable: [class-definitions-order, max-file-lines, max-line-length, max-public-methods, no-else-return]
