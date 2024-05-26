@@ -1,23 +1,22 @@
 name: Code style workflow
-
 on:
   workflow_dispatch:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
-
+    branches: ["master"]
 jobs:
   static-checks:
     name: 'Static checks'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: Scony/godot-gdscript-toolkit@master
-    - run: echo "# Lint result" >> result  
-    - run: gdlint logger.gd plugin.gd &>> result
-      continue-on-error: true
-    - run: echo "# Can files be formatted" >> result  
-    - run: gdformat --check logger.gd plugin.gd &>> result
-      continue-on-error: true
-    - run: cat ./result >> $GITHUB_STEP_SUMMARY
+      - uses: actions/checkout@v3
+      - uses: Scony/godot-gdscript-toolkit@master
+      - run: echo "# Lint result" >> result
+      - run: gdlint logger.gd plugin.gd &>> result
+        continue-on-error: true
+      - run: echo "# Can files be formatted" >> result
+      - run: gdformat --check logger.gd plugin.gd &>> result
+        continue-on-error: true
+      - run: cat ./result >> $GITHUB_STEP_SUMMARY
+
