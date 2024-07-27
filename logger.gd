@@ -32,7 +32,7 @@ class ExternalSink:
 		"""Flush the buffer, i.e. write its contents to the target external sink."""
 		print("[ERROR] [logger] Using method which has to be overriden in your custom sink")
 
-	func write(output, level):
+	func write(_output, _level):
 		"""Write the string at the end of the sink (append mode), following
 		the queue mode."""
 		print("[ERROR] [logger] Using method which has to be overriden in your custom sink")
@@ -328,7 +328,9 @@ const ERROR_MESSAGES = {
 var default_output_level = INFO
 # TODO: Find (or implement in Godot) a more clever way to achieve that
 
-var default_output_strategies = [STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT]
+var default_output_strategies = [
+	STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT, STRATEGY_PRINT
+]
 var default_logfile_path = "user://%s.log" % ProjectSettings.get_setting("application/config/name")  # TODO @File
 var default_configfile_path = "user://%s.cfg" % PLUGIN_NAME
 
@@ -416,7 +418,12 @@ func error(message, module = default_module_name, error_code = -1):
 # -----------------
 
 
-func add_module(name, output_level = default_output_level, output_strategies = default_output_strategies, logfile = null):
+func add_module(
+	name,
+	output_level = default_output_level,
+	output_strategies = default_output_strategies,
+	logfile = null
+):
 	"""Add a new module with the given parameter or (by default) the
 	default ones.
 	Returns a reference to the instanced module."""
@@ -435,7 +442,6 @@ func get_module(module = default_module_name):
 		info("The requested module '%s' does not exist. It will be created with default values." % module, PLUGIN_NAME)
 		add_module(module)
 	return modules[module]
-
 
 func get_modules():
 	"""Retrieve the dictionary containing all modules."""
@@ -487,7 +493,10 @@ func add_logfile(logfile_path = default_logfile_path):
 func get_external_sink(_external_sink_name):
 	"""Retrieve the first given external sink if it exists, otherwise returns null."""
 	if not external_sinks.has(_external_sink_name):
-		warn("The requested external sink pointing to '%s' does not exist." % _external_sink_name, PLUGIN_NAME)
+		warn(
+			"The requested external sink pointing to '%s' does not exist." % _external_sink_name,
+			PLUGIN_NAME
+		)
 		return null
 	else:
 		return external_sinks[_external_sink_name]
@@ -590,7 +599,8 @@ func get_formatted_datetime():
 func format(template, level, module, message, error_code = -1):
 	var output = template
 	output = output.replace(FORMAT_IDS.level, LEVELS[level])
-	output = output.replace(FORMAT_IDS.module, module)
+	if(module!=null):
+		output = output.replace(FORMAT_IDS.module, module)
 	output = output.replace(FORMAT_IDS.message, str(message))
 	output = output.replace(FORMAT_IDS.time, get_formatted_datetime())
 
@@ -611,7 +621,7 @@ func set_output_format(new_format):
 	"""
 	for key in FORMAT_IDS:
 		if new_format.find(FORMAT_IDS[key]) == -1:
-			error("Invalid output string format. It lacks the '%s' identifier." % FORMAT_IDS[key], PLUGIN_NAME)
+			error("Invalid output string format. It lacks the '%s' identifier." % FORMAT_IDS[key],	PLUGIN_NAME)
 			return
 	output_format = new_format
 	info("Successfully changed the output format to '%s'." % output_format, PLUGIN_NAME)
@@ -695,7 +705,7 @@ func clear_memory():
 # Configuration loading/saving
 # ----------------------------
 
-const config_fields := {
+const CONFIG_FIELDS := {
 	default_output_level = "default_output_level",
 	default_output_strategies = "default_output_strategies",
 	default_logfile_path = "default_logfile_path",
@@ -714,10 +724,10 @@ func save_config(configfile = default_configfile_path):
 	var config = ConfigFile.new()
 
 	# Store default config
-	config.set_value(PLUGIN_NAME, config_fields.default_output_level, default_output_level)
-	config.set_value(PLUGIN_NAME, config_fields.default_output_strategies, default_output_strategies)
-	config.set_value(PLUGIN_NAME, config_fields.default_logfile_path, default_logfile_path)
-	config.set_value(PLUGIN_NAME, config_fields.max_memory_size, max_memory_size)
+	config.set_value(PLUGIN_NAME, CONFIG_FIELDS.default_output_level, default_output_level)
+	config.set_value(PLUGIN_NAME, CONFIG_FIELDS.default_output_strategies, default_output_strategies)
+	config.set_value(PLUGIN_NAME, CONFIG_FIELDS.default_logfile_path, default_logfile_path)
+	config.set_value(PLUGIN_NAME, CONFIG_FIELDS.max_memory_size, max_memory_size)
 
 	# External sink config
 	var external_sinks_arr = []
@@ -725,7 +735,7 @@ func save_config(configfile = default_configfile_path):
 	sorted_keys.sort()  # Sadly doesn't return the array, so we need to split it
 	for external_sink in sorted_keys:
 		external_sinks_arr.append(external_sinks[external_sink].get_config())
-	config.set_value(PLUGIN_NAME, config_fields.external_sinks, external_sinks_arr)
+	config.set_value(PLUGIN_NAME, CONFIG_FIELDS.external_sinks, external_sinks_arr)
 
 	# Modules config
 	var modules_arr = []
@@ -733,7 +743,7 @@ func save_config(configfile = default_configfile_path):
 	sorted_keys.sort()
 	for module in sorted_keys:
 		modules_arr.append(modules[module].get_config())
-	config.set_value(PLUGIN_NAME, config_fields.modules, modules_arr)
+	config.set_value(PLUGIN_NAME, CONFIG_FIELDS.modules, modules_arr)
 
 	# Save and return the corresponding error code
 	var err = config.save(configfile)
@@ -751,27 +761,38 @@ func load_config(configfile = default_configfile_path):
 	Returns an error code (OK or some ERR_*)."""
 	# Look for the file
 	if not FileAccess.file_exists(configfile):
-		warn("Could not load the config in '%s', the file does not exist." % configfile, PLUGIN_NAME)
+		warn(
+			"Could not load the config in '%s', the file does not exist." % configfile, PLUGIN_NAME
+		)
 		return ERR_FILE_NOT_FOUND
 
 	# Load its contents
 	var config = ConfigFile.new()
 	var err = config.load(configfile)
 	if err:
-		warn("Could not load the config in '%s'; exited with error %d." % [configfile, err], PLUGIN_NAME)
+		warn(
+			"Could not load the config in '%s'; exited with error %d." % [configfile, err],
+			PLUGIN_NAME
+		)
 		return err
 
 	# Load default config
-	default_output_level = config.get_value(PLUGIN_NAME, config_fields.default_output_level, default_output_level)
-	default_output_strategies = config.get_value(PLUGIN_NAME, config_fields.default_output_strategies, default_output_strategies)
-	default_logfile_path = config.get_value(PLUGIN_NAME, config_fields.default_logfile_path, default_logfile_path)
-	max_memory_size = config.get_value(PLUGIN_NAME, config_fields.max_memory_size, max_memory_size)
+	default_output_level = config.get_value(
+		PLUGIN_NAME, CONFIG_FIELDS.default_output_level, default_output_level
+	)
+	default_output_strategies = config.get_value(
+		PLUGIN_NAME, CONFIG_FIELDS.default_output_strategies, default_output_strategies
+	)
+	default_logfile_path = config.get_value(
+		PLUGIN_NAME, CONFIG_FIELDS.default_logfile_path, default_logfile_path
+	)
+	max_memory_size = config.get_value(PLUGIN_NAME, CONFIG_FIELDS.max_memory_size, max_memory_size)
 
 	# Load external config and initialize them
 	flush_buffers()
 	external_sinks = {}
 	add_logfile(default_logfile_path)
-	for logfile_cfg in config.get_value(PLUGIN_NAME, config_fields.external_sinks, []):
+	for logfile_cfg in config.get_value(PLUGIN_NAME, CONFIG_FIELDS.external_sinks, []):
 		var logfile = Logfile.new(logfile_cfg["path"], logfile_cfg["queue_mode"])
 		external_sinks[logfile_cfg["path"]] = logfile
 
@@ -779,9 +800,12 @@ func load_config(configfile = default_configfile_path):
 	modules = {}
 	add_module(PLUGIN_NAME)
 	add_module(default_module_name)
-	for module_cfg in config.get_value(PLUGIN_NAME, config_fields.modules, []):
+	for module_cfg in config.get_value(PLUGIN_NAME, CONFIG_FIELDS.modules, []):
 		var module = Module.new(
-			module_cfg["name"], module_cfg["output_level"], module_cfg["output_strategies"], get_external_sink(module_cfg["external_sink"]["path"])
+			module_cfg["name"],
+			module_cfg["output_level"],
+			module_cfg["output_strategies"],
+			get_external_sink(module_cfg["external_sink"]["path"])
 		)
 		modules[module_cfg["name"]] = module
 
