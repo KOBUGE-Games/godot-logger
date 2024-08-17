@@ -334,8 +334,8 @@ var default_configfile_path = "user://%s.cfg" % PLUGIN_NAME
 
 # e.g. "[INFO] [main] The young alpaca started growing a goatie."
 var output_format = "[{TIME}] [{LVL}] [{MOD}]{ERR_MSG} {MSG}"
-# Example with all supported placeholders: "YYYY.MM.DD hh.mm.ss"
-# would output e.g.: "2020.10.09 12:10:47".
+# Example with all supported placeholders: "YYYY.MM.DD hh.mm.ss.SSS"
+# would output e.g.: "2020.10.09 12:10:47.034".
 var time_format = "hh:mm:ss"
 
 # Holds the name of the debug module for easy usage across all logging functions.
