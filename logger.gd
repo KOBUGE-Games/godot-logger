@@ -569,7 +569,7 @@ func get_default_output_level():
 # * hh = Hour
 # * mm = Minutes
 # * ss = Seconds
-# * ms = Milliseconds
+# * SSS = Milliseconds
 func get_formatted_datetime():
 	var unix_time: float = Time.get_unix_time_from_system()
 	var time_zone: Dictionary = Time.get_time_zone_from_system()
@@ -583,7 +583,7 @@ func get_formatted_datetime():
 	result = result.replace("hh", "%02d" % [datetime.hour])
 	result = result.replace("mm", "%02d" % [datetime.minute])
 	result = result.replace("ss", "%02d" % [datetime.second])
-	result = result.replace("ms", "%03d" % [datetime.millisecond])
+	result = result.replace("SSS", "%03d" % [datetime.millisecond])
 	return result
 
 
