@@ -47,6 +47,7 @@ property, with the placeholders described below.
 * `hh` = Hour
 * `mm` = Minute
 * `ss` = Second
+* `SSS` = Millisecond
 
 **Error codes:**
 
@@ -65,7 +66,7 @@ Logger.error("Failed to rotate the albatross", "main", ERR_INVALID_DATA)
 var msg = "Error occurred!"
 
 Logger.output_format = "[{TIME}] [{LVL}] [{MOD}] {MSG}"
-Logger.time_format = "YYYY.MM.DD hh:mm:ss"
+Logger.time_format = "YYYY.MM.DD hh:mm:ss.SSS"
 Logger.error(msg)
 
 Logger.time_format = "hh:mm:ss"
@@ -77,7 +78,7 @@ Logger.error(msg)
 
 Results in:
 ```
-[2020.10.09 12:10:47] [ERROR] [main] Error occurred!
+[2020.10.09 12:10:47.034] [ERROR] [main] Error occurred!
 
 [12:10:47] [ERROR] [main] Error occurred!
 
