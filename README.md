@@ -5,7 +5,7 @@ The *Godot Logger* is a plugin that provides a logging API for
 projects developed with [Godot Engine](https://godotengine.org).
 
 # Usage
-
+hjjjjjjghhhhhhhhhhh、
 1. Clone or extract this repository as the `res://addons/godot-logger` folder in your project.
 2. Enable the addon from  Project -> Project Settings -> Plugins -> Godot Logger.
 3. An autoloaded script will be added to your project singletons list as `Logger`.
