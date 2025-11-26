@@ -8,15 +8,15 @@ projects developed with [Godot Engine](https://godotengine.org).
 
 1. Clone or extract this repository as the `res://addons/godot-logger` folder in your project.
 2. Enable the addon from  Project -> Project Settings -> Plugins -> Godot Logger.
-3. An autoloaded script will be added to your project singletons list as `Logger`.
+3. An autoloaded script will be added to your project singletons list as `KLogger`.
 
-The methods of the API can then be accessed from any other script via the *Logger*
+The methods of the API can then be accessed from any other script via the *KLogger*
 singleton:
 ```
-  Logger.warn("Alpaca mismatch!")
+  KLogger.warn("Alpaca mismatch!")
 
-  Logger.add_module("mymodule")
-  Logger.info("Reticulating splines...", "mymodule")
+  KLogger.add_module("mymodule")
+  KLogger.info("Reticulating splines...", "mymodule")
 ```
 
 Read the code for details about the API, it's extensively documented.
@@ -57,7 +57,7 @@ which will be mapped to a human-readable error message.
 
 Example:
 ```
-Logger.error("Failed to rotate the albatross", "main", ERR_INVALID_DATA)
+KLogger.error("Failed to rotate the albatross", "main", ERR_INVALID_DATA)
 ```
 
 ### Example
@@ -65,15 +65,15 @@ Logger.error("Failed to rotate the albatross", "main", ERR_INVALID_DATA)
 ```gdscript
 var msg = "Error occurred!"
 
-Logger.output_format = "[{TIME}] [{LVL}] [{MOD}] {MSG}"
-Logger.time_format = "YYYY.MM.DD hh:mm:ss.SSS"
-Logger.error(msg)
+KLogger.output_format = "[{TIME}] [{LVL}] [{MOD}] {MSG}"
+KLogger.time_format = "YYYY.MM.DD hh:mm:ss.SSS"
+KLogger.error(msg)
 
-Logger.time_format = "hh:mm:ss"
-Logger.error(msg)
+KLogger.time_format = "hh:mm:ss"
+KLogger.error(msg)
 
-Logger.output_format = "[{LVL}] {MSG} at {TIME}"
-Logger.error(msg)
+KLogger.output_format = "[{LVL}] {MSG} at {TIME}"
+KLogger.error(msg)
 ```
 
 Results in:
@@ -87,5 +87,5 @@ Results in:
 
 ## Licensing
 
-The Logger class and all other files of this repository are distributed under the
+The KLogger class and all other files of this repository are distributed under the
 MIT license (see the LICENSE.md file).
